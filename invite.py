@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 sender = 'jayekub@gmail.com'
-recipients = ['jacobk@pixar.com']
+recipients = ['jacobk@pixar.com', 'joycemujeh@gmail.com']
 
 message = MIMEMultipart('alternative')
 message['From'] = sender
