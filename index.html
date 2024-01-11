@@ -3,7 +3,9 @@
   <head>
     <meta charset="utf-8">
     <title>Jacob's Roaring 40th</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Josefin+Sans|Josefin+Sans:b">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@200;400;700&display=swap">
     <style>
         @font-face {
             font-family: "Parisish";
@@ -15,32 +17,52 @@
         }
 
         body {
-            width: 768px;
+            width: 1024px;
             margin: auto;
 
             background-color: #000000;
 
             font-family: "Josefin Sans", sans-serif;
+            font-weight: lighter;
             text-align: justify;
             font-size: 24px;
             color: #c4996c;
         }
 
+        header {
+          border: 1px solid #c4996c;
+          padding: 5px;
+        }
+
+        .header-inner {
+          border: 1px solid #c4996c;
+          padding: 10px;
+        }
+
         h1 {
           font-family: "Parisish";
           font-size: 52px;
-          font-weight: bold;
+          font-weight: bolder;
           text-transform: uppercase;
           text-align: center;
+
+          margin: 0 0 0 0;
         }
 
         h2 {
           font-weight: normal;
           text-align: center;
+          margin: 0;
         }
 
         h3 {
           text-align: center;
+        }
+
+        hr {
+          border: 0;
+          border-top: 2px dotted #c4996c;
+          width: 75%;
         }
 
         a {
@@ -48,17 +70,47 @@
           font-weight: bold;
           text-decoration-thickness: 2px;
         }
+
+        section.summary {
+          border: 1px solid #c4996c;
+          padding: 25px;
+          margin-top: 25px;
+          margin-bottom: 25px;
+        }
+
+        section.summary > p {
+          margin: 5px;
+        }
+
+        section.details {
+          border: 1px solid #c4996c;
+          padding: 25px;
+        }
     </style>
   </head>
   <body>
-    <h1>Jacob's Roaring 40th</h1>
-    <h2>Saturday, June 29th, 2024</h2>
-    <h3><a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP Now</a></h3>
-    <p>Please join and help me celebrate my 40th birthday, 1920’s style! Meeting location and detailed instructions will be emailed 24 hours before the party. Be prepared to travel to a discreet location where North Beach and Chinatown coalesce.</p>
-    <p>We’ll begin promptly at 6:15PM with a private reception for party attendees to meet one another, listen to a 6 piece jazz band, and learn how to make prohibition-era cocktails.</p>
-    <p>At 8:00PM we’ll join with other audience members for a unique immersive theatrical experience: you’ll be free to explore a large prohibition era club, sip on handcrafted cocktails, test your luck in the casino, enjoy exciting performances, and interact with the many characters as they go about their evening.</p>
-    <p>A dress code is strictly enforced. 1920’s apparel is preferred, cocktail attire is accepted. This entails a button down collared shirt and tie with slacks and dress shoes, or dress and dress shoes.  Note that tennis shoes, yoga pants, t-shirts, denim, or other casual clothes are not allowed.</p>
-    <p>Tickets will be purchased on your behalf for the immersive theater portion of the evening. No tickets are required for the private reception, but space is limited. <a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by April 1st to secure your spot for either/both.</p>
-    <p>Visit <a href="https://www.thespeakeasysf.com/the-speakeasy-show/">https://www.thespeakeasysf.com/the-speakeasy-show/</a> for more information about the show.</p>
+    <header>
+      <div class="header-inner">
+        <h1>Jacob's Roaring 40<sup>th</sup></h1>
+        <h2>Saturday, June 29<sup>th</sup>, 2024</h2>
+      </div>
+    </header>
+    <main>
+      <section class="summary">
+        <p>6:15-7:45PM &mdash; Private reception featuring an open bar, live jazz band, and mixology lesson</p>
+        <p>8:00-10:30PM &mdash; "The Speakeasy" immersive theatrical experience</p>
+        <br/>
+        <p>Tickets to "The Speakeasy" provided; <a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by April 1<sup>st</sup> to secure yours.</p>
+        <p>Dress is 1920's apparel</p>
+      </section>
+      <section class="details">
+        <p>Please join and help me celebrate my 40<sup>th</sup> birthday, 1920’s style! Meeting location and detailed instructions will be emailed 24 hours before the party. Be prepared to travel to a discreet location in San Francisco, CA.</p>
+        <p>We’ll begin promptly at 6:15PM with a private reception for birthday party attendees to meet one another, listen to a six piece jazz band, and learn how to make prohibition-era cocktails.</p>
+        <p>At 8:00PM we’ll join with other audience members for a unique immersive theatrical experience: you’ll be free to explore an expansive nightclub, sip on handcrafted cocktails, test your luck in the casino, enjoy exciting performances, and interact with the many characters as they go about their evening.</p>
+        <p>A dress code is strictly enforced. 1920’s apparel is preferred, cocktail attire is accepted. This entails a button down collared shirt and tie with slacks and dress shoes, or dress and dress shoes.  Note that tennis shoes, yoga pants, t-shirts, denim, or other casual clothes are not allowed.</p>
+        <p>Tickets will be purchased on your behalf for the immersive theater portion of the evening. No tickets are required for the private reception, but space is limited. <a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by April 1st to secure your spot for either/both.</p>
+        <p>Visit <a href="https://www.thespeakeasysf.com/the-speakeasy-show/">https://www.thespeakeasysf.com/the-speakeasy-show/</a> for more information about the show.</p>
+      </section>
+    </main>
   </body>
 </html>
