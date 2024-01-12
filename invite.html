@@ -17,58 +17,71 @@
 
     <style type="text/css">
       @font-face {
-          font-family: "Telegraphem";
-          src:
-              url("Telegraphem.otf")
-              format("opentype");
-          font-weight: normal;
-          font-style: normal;
+        font-family: "Telegraphem";
+        src:
+            url("Telegraphem.otf")
+            format("opentype");
+        font-weight: normal;
+        font-style: normal;
+      }
+
+      :root {
+        font-size: 16px;
       }
 
       body {
-          font-family: "Telegraphem", monospace;
-          font-size: 17px;
-          text-transform: uppercase;
-          text-align: center;
-          color: rgb(51, 50, 55);
+        font-family: "Telegraphem", monospace;
+        font-size: 1.0625rem;
+        text-transform: uppercase;
+        color: rgb(51, 50, 55);
       }
 
       .telegram {
-          background-image: url("https://jayekub.github.io/telegram.jpg");
-          background-color: rgb(214, 182, 135);
-          margin: auto;
-          width: 966px;
-          height: 785px;
+        background-color: rgb(214, 182, 135);
+        background-image: url("https://jayekub.github.io/telegram.jpg");
+        background-size: contain;
+
+        margin: auto;
+
+        width: 60.375rem;
+        height: 49.0625rem;
       }
 
       .message {
-          padding-top: 270px;
-          padding-left: 80px;
-          box-sizing: border-box;
-          transform: rotate(-0.25deg);
-          text-align: left;
+        padding-top: 16.875rem;
+        padding-left: 5rem;
+        box-sizing: border-box;
+        transform: rotate(-0.25deg);
+        text-align: left;
       }
 
       a {
-          color: rgb(51, 50, 55);
-          font-weight: bold;
-          text-decoration-thickness: 2px;
+        color: rgb(51, 50, 55);
+        font-weight: bold;
+        text-decoration-thickness: 0.125rem;
       }
 
-      a.browser {
+      .browser-link {
         text-align: center;
+        margin: auto;
+
+        padding: 0.5rem;
+      }
+
+      .browser-link > a {
         color: rgb(128, 128, 128);
         font-family: monospace;
         font-weight: normal;
-        padding-bottom: 25px;
       }
     </style>
   </head>
   <body>
-    <a class="browser" href="https://roaring40th.jayekub.com/invite.html">View in Browser</a>
-    <div class="telegram">
-      <div class="message">
-        <p>SAN FRANCISCO CA 903P JAN 10 2024</p>
+    <header class="browser-link">
+      <a href="https://roaring40th.jayekub.com/invite.html">View in Browser</a>
+    </header>
+    <main class="telegram">
+      <section class="message">
+        <p>SAN FRANCISCO CA 903P JAN 10 24</p>
         <br/>
         <p>You're invited to <strong>Jacob's Roaring 40th</strong> on Jun 29</p>
         <br/>
@@ -79,7 +92,7 @@
         <p>Dress is 1920s themed apparel</p>
         <br/>
         <p><a href="https://roaring40th.jayekub.com/">Click Here</a> for details</p>
-      </div>
-    </div>
+      </section>
+    </main>
   </body>
 </html>
