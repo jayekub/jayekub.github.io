@@ -23,8 +23,6 @@
             background: var(--black);
             color: var(--gold);
 
-            text-align: justify;
-
             font-family: "Josefin Sans", sans-serif;
             font-weight: 300;
             font-size: 1.5rem;
@@ -38,28 +36,41 @@
 
           text-transform: uppercase;
           text-align: center;
+
+          margin: 1.5rem;
         }
 
         a {
           color: var(--gold);
+        }
 
+        a.rsvp {
           font-weight: bold;
           text-decoration-thickness: 0.125rem;
         }
 
-        header, section {
+        section {
           border: 1px solid var(--gold);
 
           margin: 1.5rem;
+          margin-top: 2lh;
           padding: 1.5rem;
-        }
 
-        section.summary {
-          text-align: left;
-        }
+          position: relative;
 
-        section.summary > p {
-          margin: 0.3rem;
+          h2 {
+            background-color: var(--black);
+            border: 0.0625rem solid var(--gold);
+            font-family: "Limelight";
+            padding: 0.5rem;
+
+            position: absolute;
+            top: -0.7lh;
+
+            padding-left: 0.5em;
+            padding-right: 0.5em;
+            margin: 0;
+          }
         }
 
         .double-border {
@@ -78,6 +89,58 @@
 
           border: 0.0625rem solid var(--gold);
         }
+
+        section.summary > ul {
+          padding: 0;
+          margin-bottom: 0;
+
+          li {
+            list-style-type: none;
+          }
+        }
+
+        section.details {
+          text-align: justify;
+
+          address > a {
+            font-style: normal;
+            font-weight: lighter;
+          }
+        }
+
+        section > p:last-child {
+          margin-bottom: 0;
+        }
+
+        section.lodging > ul {
+          padding-left: 0.75em;
+          margin-bottom: 0;
+          list-style: none;
+
+          li {
+            padding-left: 1em;
+            padding-bottom: 0.1em;
+            position: relative;
+
+            &:after {
+              content: '';
+              height: 0.4em;
+              width: 0.4em;
+
+              background: var(--gold);
+              display: block;
+              position: absolute;
+              transform: rotate(45deg);
+
+              top: 0.25em;
+              left: 0;
+            }
+
+            a {
+              font-weight: lighter;
+            }
+          }
+        }
     </style>
   </head>
   <body>
@@ -86,22 +149,47 @@
     </header>
     <main>
       <section class="summary">
-        <p>Saturday, June 29<sup>th</sup>, 2024</p>
-        <p>North Beach, San Francisco, CA</p>
-        <br/>
-        <p>6:15-7:45PM &mdash; Private reception featuring an open bar, live jazz band, and mixology lesson</p>
-        <p>8:00-10:30PM &mdash; "The Speakeasy" immersive theatrical experience</p>
-        <br/>
-        <p>Tickets to "The Speakeasy" provided; <a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by April 1<sup>st</sup> to secure yours.</p>
-        <p>Dress is 1920's apparel</p>
+        <h2>In Brief</h2>
+        <ul>
+          <li>Saturday, June 29<sup>th</sup>, 2024</li>
+          <li>North Beach, San Francisco, California</li>
+          <li>&nbsp;</li>
+          <li>6:15-7:45PM &mdash; Private reception featuring an open bar, live jazz band, and mixology lesson</li>
+          <li>8:00-10:30PM &mdash; <q>The Speakeasy</q> immersive theatrical experience</li>
+          <li>&nbsp;</li>
+          <li>Tickets to <q>The Speakeasy</q> provided; <a class="rsvp" href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by March 31<sup>st</sup> to secure yours</li>
+          <li>&nbsp;</li>
+          <li>Dress is 1920's apparel</li>
+        </ul>
       </section>
       <section class="details">
-        <p>Please join and help me celebrate my 40<sup>th</sup> birthday, 1920’s style! Meeting location and detailed instructions will be emailed 24 hours before the party. Be prepared to travel to a discreet location in San Francisco, CA.</p>
+        <h2>Details</h2>
+        <p>Please join and help me celebrate my 40<sup>th</sup> birthday, 1920’s style!</p>
+        <p>The exact location is a secret, but a meeting location and detailed instructions will be telegraphed 24 hours before the party &mdash; be prepared to travel to a discreet location in San Francisco's North Beach neighborhood.</p>
         <p>We’ll begin promptly at 6:15PM with a private reception for birthday party attendees to meet one another, listen to a six piece jazz band, and learn how to make prohibition-era cocktails.</p>
-        <p>At 8:00PM we’ll join with other audience members for a unique immersive theatrical experience: you’ll be free to explore an expansive nightclub, sip on handcrafted cocktails, test your luck in the casino, enjoy exciting performances, and interact with the many characters as they go about their evening.</p>
-        <p>A dress code is strictly enforced. 1920’s apparel is preferred, cocktail attire is accepted. This entails a button down collared shirt and tie with slacks and dress shoes, or dress and dress shoes.  Note that tennis shoes, yoga pants, t-shirts, denim, or other casual clothes are not allowed.</p>
-        <p>Tickets will be purchased on your behalf for the immersive theater portion of the evening. No tickets are required for the private reception, but space is limited. <a href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by April 1st to secure your spot for either/both.</p>
-        <p>Visit <a href="https://www.thespeakeasysf.com/the-speakeasy-show/">https://www.thespeakeasysf.com/the-speakeasy-show/</a> for more information about the show.</p>
+        <p>At 8:00PM we’ll join with other audience members for an immersive theatrical experience: you’ll be free to explore an expansive nightclub, sip on handcrafted cocktails, test your luck in the casino, enjoy exciting performances, and interact with the many characters as they go about their evening.</p>
+        <p>A dress code is strictly enforced. 1920’s apparel is preferred, cocktail attire is accepted.</p>
+        <p>Tickets will be purchased on your behalf for the immersive theater portion of the evening. No tickets are required for the private reception, but space is limited. <a class="rsvp" href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by March 31<sup>st</sup> to secure your spot for either or both events.</p>
+        <p>Visit <a href="https://www.thespeakeasysf.com/the-speakeasy-show/"><q>The Speakeasy</q>'s website</a> for more information about the show.</p>
+        <p>For any other questions, don't hesitate to get in touch:</p>
+        <address>
+          <a href="mailto:jayekub@gmail.com">jayekub@gmail.com</a><br/>
+          <a href="tel:+12167026821">(216) 702-6821</a>
+        </address>
+      </section>
+      <section class="lodging">
+        <h2>Lodging</h2>
+        <p>If you're in need of a place to stay, consider our neighborhood! We live just off of Lafayette Park at:</p>
+        <address>
+          2171 Sacramento Street Unit 2<br/>
+          San Francisco, CA 94109
+        </address>
+        <p>Here are some nearby hotels to check out:</p>
+        <ul>
+          <li><a href="https://www.ihg.com/holidayinn/hotels/us/en/san-francisco/sfogg/hoteldetail">Holiday Inn San Francisco-Golden Gateway</a></li>
+          <li><a href="http://thehotelmajestic.com/">Hotel Majestic</a>
+          <li><a href="https://www.jdvhotels.com/hotels/california/san-francisco/hotel-kabuki">Hotel Kabuki</a></li>
+        </ul>
       </section>
     </main>
   </body>
