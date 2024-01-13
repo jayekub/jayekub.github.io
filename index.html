@@ -57,8 +57,9 @@
           padding: 1.5rem;
 
           position: relative;
+        }
 
-          h2 {
+        section > h2 {
             background-color: var(--black);
             border: 0.0625rem solid var(--gold);
             font-family: "Limelight";
@@ -70,7 +71,6 @@
             padding-left: 0.5em;
             padding-right: 0.5em;
             margin: 0;
-          }
         }
 
         .double-border {
@@ -93,19 +93,19 @@
         section.summary > ul {
           padding: 0;
           margin-bottom: 0;
+        }
 
-          li {
+        section.summary > ul > li {
             list-style-type: none;
-          }
         }
 
         section.details {
           text-align: justify;
+        }
 
-          address > a {
+        section.details > address > a {
             font-style: normal;
             font-weight: lighter;
-          }
         }
 
         section > p:last-child {
@@ -116,8 +116,9 @@
           padding-left: 0.75em;
           margin-bottom: 0;
           list-style: none;
+        }
 
-          li {
+        section.lodging > ul > li {
             padding-left: 1em;
             padding-bottom: 0.1em;
             position: relative;
@@ -135,11 +136,10 @@
               top: 0.25em;
               left: 0;
             }
+        }
 
-            a {
-              font-weight: lighter;
-            }
-          }
+        section.lodging > ul > li > a {
+          font-weight: lighter;
         }
     </style>
   </head>
