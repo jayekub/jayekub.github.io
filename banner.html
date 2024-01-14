@@ -6,7 +6,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;700&family=Limelight&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@300;700&family=Limelight&family=Abril+Fatface&display=swap">
 
     <style type="text/css">
         :root {
@@ -34,19 +34,12 @@
           font-family: "Limelight";
           font-size: 2.25rem;
 
-          text-transform: uppercase;
           text-align: center;
 
           margin: 1.5rem;
 
-          aspect-ratio: 4 / 1;
+          aspect-ratio: 5 / 1;
           position: relative;
-        }
-
-        header > h1 {
-          display: flex;
-          justify-content: center;
-          align-items: center;
         }
 
         header > h1 {
@@ -56,6 +49,25 @@
           left: 50%;
           width: 100%;
           transform: translate(-50%, -50%);
+          letter-spacing: 0.05em;
+        }
+
+        header > h1 > .name {
+          font-family: Abril Fatface;
+          font-weight: 100;
+          font-size: 4rem;
+          margin-bottom: -1rem;
+        }
+
+        header > h1 > .title {
+          text-transform: uppercase;
+          font-weight: normal;
+          font-size: 5rem;
+          margin-top: -1rem;
+        }
+
+        header > h1 > .title > sup {
+          font-size: 3rem;
         }
 
         a {
@@ -163,7 +175,11 @@
   </head>
   <body>
     <header class="double-border">
-      <h1>Jacob's Roaring 40<sup>th</sup></h1>
+      <h1>
+      <div class="name">&middot; &middot; &middot; &middot; &middot; <i>Jacob's</i> &middot; &middot; &middot; &middot; &middot;</div>
+      <!-- <div class="name"><i>Jacob's</i></div> -->
+      <div class="title">Roaring 40<sup>th</sup></div>
+      </h1>
     </header>
   </body>
 </html>
