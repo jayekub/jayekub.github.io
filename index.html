@@ -156,6 +156,45 @@
           font-weight: lighter;
         }
     </style>
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const re = /\s*<.*>$/;
+
+        if (params.has('invitee'))
+        {
+          invitees = params.getAll('invitee')
+                          .map(s => String(s).replace(re, '').trim());
+                          //.map(s=> String(s).split(' ')[0]);
+
+          var name = invitees[0];
+          var rsvp = 'Both+the+private+reception+and+%22The+Speakeasy%22';
+
+          var name1 = '';
+          var rsvp1 = 'Sorry,+can\'t+make+it';
+
+          if (invitees.length == 2)
+          {
+            name1 = invitees[1];
+            rsvp1 = rsvp;
+          } 
+          else if (invitees.length > 2)
+          {
+            name1 = invitees.slice(1).join(', ');
+            rsvp1 = rsvp;
+          }
+
+          url = 'https://docs.google.com/forms/d/e/1FAIpQLSeaLeYHqjlLGI8kTfUMoaau0m99cnqXsvuR3v5xifFee1Iyig/viewform?usp=pp_url' +
+            '&entry.1063765040=' + name + 
+            '&entry.596312083=' + rsvp + 
+            '&entry.1867705897=' + name1 + 
+            '&entry.1473379779=' + rsvp1;
+
+          document.getElementById('summary-rsvp').href = url;
+          document.getElementById('details-rsvp').href = url;
+        }
+      });
+    </script>
   </head>
   <body>
     <header class="double-border">
@@ -170,7 +209,7 @@
         </address>
         <p>6:00PM &mdash; Private reception featuring an open bar, live jazz band, and mixology lesson</p>
         <p>8:00PM &mdash; <q>The Speakeasy</q> immersive theatrical experience</p>
-        <p>Tickets to <q>The Speakeasy</q> provided; <a class="rsvp" href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by March 1<sup>st</sup> to secure yours</p>
+        <p>Tickets to <q>The Speakeasy</q> provided; <a id="summary-rsvp" class="rsvp" href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by March 1<sup>st</sup> to secure yours</p>
         <p>Dress is 1920's apparel</p>
       </section>
       <section class="details">
@@ -181,7 +220,7 @@
         <p>At 8:00PM we’ll join with other audience members for an immersive theatrical experience: you’ll be free to explore an expansive nightclub, sip on handcrafted cocktails, test your luck in the casino, enjoy exciting performances, and interact with the many characters as they go about their evening.</p>
         <p>A dress code is strictly enforced &mdash; 1920’s apparel is preferred, cocktail attire is accepted. There will be a professional photographer taking candids during the private reception, so come dressed to impress!</p>
         <p>Tickets will be purchased on your behalf for the immersive theater portion of the evening. No tickets are required for the private reception, but space is limited. <a class="rsvp" href="https://forms.gle/77Xmqfp6L5BCY5q67">RSVP</a> by March 1<sup>st</sup> to secure your spot for either or both events.</p>
-        <p>Visit <a href="https://www.thespeakeasysf.com/the-speakeasy-show/">The Speakeasy's website</a> for more information about the show.</p>
+        <p>Visit <a id="details-rsvp" class="rsvp" href="https://www.thespeakeasysf.com/the-speakeasy-show/">The Speakeasy's website</a> for more information about the show.</p>
         <p>For any other questions, don't hesitate to get in touch:</p>
         <address>
           <a href="mailto:jayekub@gmail.com">jayekub@gmail.com</a><br/>
