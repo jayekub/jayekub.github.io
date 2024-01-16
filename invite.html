@@ -36,7 +36,7 @@
         color: rgb(51, 50, 55);
       }
 
-      .telegram {
+      #telegram {
         background-color: rgb(214, 182, 135);
         background-image: url("https://jayekub.github.io/telegram.jpg");
         background-size: contain;
@@ -47,12 +47,13 @@
         height: 49.0625rem;
       }
 
-      .message {
+      #message {
         padding-top: 16.875rem;
         padding-left: 5rem;
         box-sizing: border-box;
         transform: rotate(-0.25deg);
         text-align: left;
+        white-space: pre;
       }
 
       a {
@@ -60,38 +61,46 @@
         font-weight: bold;
         text-decoration-thickness: 0.125rem;
       }
-
-      .browser-link {
-        text-align: center;
-        margin: auto;
-
-        padding: 0.5rem;
-      }
-
-      .browser-link > a {
-        color: rgb(128, 128, 128);
-        font-family: monospace;
-        font-weight: normal;
-      }
     </style>
   </head>
   <body>
-    <header class="browser-link">
-      <a href="https://roaring40th.jayekub.com/invite.html">View in Browser</a>
-    </header>
-    <main class="telegram">
-      <section class="message">
-        <p>SAN FRANCISCO CA 903P JAN 10 24</p>
-        <br/>
-        <p>You're invited to <strong>Jacob's Roaring 40th</strong> on Jun 29</p>
-        <br/>
-        <p>6:15P - Private reception featuring open bar, live jazz, and mixology lesson</p>
-        <p>8:00P - “The Speakeasy” immersive theatrical experience</p>
-        <br/>
-        <p>Tickets to “The Speakeasy” provided, <strong>RSVP by March 31st to secure yours</strong></p>
-        <p>Dress is 1920s themed apparel</p>
-        <br/>
-        <p><a href="https://roaring40th.jayekub.com/">Click Here</a> for details</p>
+    <main id="telegram">
+      <section id="message">
+MPA191 R295CC 1F FT                                       903P PST JAN 16 24
+          SAN FRANCISCO, CA=
+<script type="text/javascript">
+  const params = new URLSearchParams(window.location.search);
+  const re = /\s*<.*>$/;
+
+  if (params.has('recipient'))
+  {
+    document.writeln('');
+    
+    document.writeln(
+      params.getAll('recipient')
+            .map(r => String(r).replace(re, ''))
+            .join(" AND "));
+
+    if (params.has('destination'))
+    {
+      document.writeln('          ' + params.get('destination') + '=');
+    }
+
+    document.writeln('');
+  }
+</script>
+YOU ARE INVITED TO JACOBS ROARING 40TH ON JUN 29
+
+6:15P - PRIVATE RECEPTION FEATURING OPEN BAR, LIVE JAZZ, AND MIXOLOGY LESSON
+8:00P - “THE SPEAKEASY” IMMERSIVE THEATRICAL EXPERIENCE
+
+TICKETS TO THE SPEAKEASY PROVIDED, RSVP BY MARCH 31ST TO SECURE YOURS
+
+DRESS IS 1920S THEMED APPAREL
+
+<a href="https://roaring40th.jayekub.com/">CLICK</a> FOR DETAILS
+
+          JACOB KUENZEL
       </section>
     </main>
   </body>
