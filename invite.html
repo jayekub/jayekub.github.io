@@ -8,7 +8,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit="no"> 
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0" shrink-to-fit="no">  -->
 
     <meta name="color-scheme" content="light only">
     <meta name="supported-color-schemes" content="light only">
@@ -48,10 +48,10 @@
       }
 
       #message {
-        padding-top: 16.875rem;
+        padding-top: 19rem;
         padding-left: 5rem;
         box-sizing: border-box;
-        transform: rotate(-0.25deg);
+        transform: rotate(-0.33deg);
         text-align: left;
         white-space: pre;
       }
@@ -62,44 +62,63 @@
         text-decoration-thickness: 0.125rem;
       }
     </style>
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        const re = /\s*<.*>$/;
+
+        if (params.has('invitee'))
+        {
+
+          invitees = params.getAll('invitee')
+                          //.map(s => String(s).replace(re, '').trim());
+                          .map(s=> String(s).split(' ')[0]);
+
+          if (invitees.length == 1)
+          {
+              address = invitees[0] + '\n';
+          }
+          else if (invitees.length == 2)
+          {
+              address = invitees[0] + ' AND ' + invitees[1] + '\n';
+          }
+          else
+          {
+              address =
+                invitees.slice(0, -1).join(', ') +
+                (invitees.length > 1 ? ', AND ' + invitees[invitees.length - 1] : '') +
+                '\n';
+          }
+          
+          if (params.has('location'))
+          {
+            address += '     ' + params.get('location') + '=\n';
+          }
+
+          message = document.getElementById('message');
+          message.prepend(address + '\n');
+          
+          details = document.getElementById('details-link');
+          details.href += window.location.search;
+        }
+      });
+    </script>
   </head>
   <body>
     <main id="telegram">
       <section id="message">
-MPA191 R295CC 1F FT                                       903P PST JAN 16 24
-          SAN FRANCISCO, CA=
-<script type="text/javascript">
-  const params = new URLSearchParams(window.location.search);
-  const re = /\s*<.*>$/;
-
-  if (params.has('recipient'))
-  {
-    document.writeln('');
-    
-    document.writeln(
-      params.getAll('recipient')
-            .map(r => String(r).replace(re, ''))
-            .join(" AND "));
-
-    if (params.has('destination'))
-    {
-      document.writeln('          ' + params.get('destination') + '=');
-    }
-
-    document.writeln('');
-  }
-</script>
 YOU ARE INVITED TO JACOBS ROARING 40TH ON JUN 29
 
-6:15P - PRIVATE RECEPTION FEATURING OPEN BAR, LIVE JAZZ, AND MIXOLOGY LESSON
+6:00P - PRIVATE RECEPTION FEATURING OPEN BAR, LIVE JAZZ, AND MIXOLOGY LESSON
 8:00P - “THE SPEAKEASY” IMMERSIVE THEATRICAL EXPERIENCE
 
-TICKETS TO THE SPEAKEASY PROVIDED, RSVP BY MARCH 31ST TO SECURE YOURS
+TICKETS TO THE SPEAKEASY PROVIDED, RSVP BY MARCH 1ST TO SECURE YOURS
 
 DRESS IS 1920S THEMED APPAREL
 
-<a href="https://roaring40th.jayekub.com/">CLICK</a> FOR DETAILS
+<a id='details-link' href="https://roaring40th.jayekub.com/">CLICK</a> FOR DETAILS
 
+     REGARDS
           JACOB KUENZEL
       </section>
     </main>
