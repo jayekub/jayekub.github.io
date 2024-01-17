@@ -24,7 +24,6 @@
             color: var(--gold);
 
             font-family: "Josefin Sans", sans-serif;
-            font-weight: 300;
             font-size: 1.5rem;
         }
 
@@ -33,74 +32,32 @@
 
           font-family: "Limelight";
           font-size: 2.25rem;
+          font-weight: 100;
 
+          text-transform: uppercase;
           text-align: center;
 
           margin: 1.5rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
 
-          aspect-ratio: 5 / 1;
+          aspect-ratio: 4/1;
+
+          height: 18rem;
+
           position: relative;
         }
 
         header > h1 {
-          margin: 0;
           position: absolute;
+          margin: 0;
           top: 50%;
           left: 50%;
-          width: 100%;
           transform: translate(-50%, -50%);
-          letter-spacing: 0.05em;
         }
 
-        header > h1 > .name {
-          font-family: Abril Fatface;
-          font-weight: 100;
-          font-size: 4rem;
-          margin-bottom: -1rem;
-        }
-
-        header > h1 > .title {
-          text-transform: uppercase;
-          font-weight: normal;
-          font-size: 5rem;
-          margin-top: -1rem;
-        }
-
-        header > h1 > .title > sup {
+        header > h1 > sup {
           font-size: 3rem;
-        }
-
-        a {
-          color: var(--gold);
-        }
-
-        a.rsvp {
-          font-weight: bold;
-          text-decoration-thickness: 0.125rem;
-        }
-
-        section {
-          border: 1px solid var(--gold);
-
-          margin: 1.5rem;
-          margin-top: 2lh;
-          padding: 1.5rem;
-
-          position: relative;
-        }
-
-        section > h2 {
-            background-color: var(--black);
-            border: 0.0625rem solid var(--gold);
-            font-family: "Limelight";
-            padding: 0.5rem;
-
-            position: absolute;
-            top: -1.8rem;
-
-            padding-left: 0.5em;
-            padding-right: 0.5em;
-            margin: 0;
         }
 
         .double-border {
@@ -119,67 +76,11 @@
 
           border: 0.0625rem solid var(--gold);
         }
-
-        section.summary > ul {
-          padding: 0;
-          margin-bottom: 0;
-        }
-
-        section.summary > ul > li {
-            list-style-type: none;
-        }
-
-        section.details {
-          text-align: justify;
-        }
-
-        section.details > address > a {
-            font-style: normal;
-            font-weight: lighter;
-        }
-
-        section > p:last-child {
-          margin-bottom: 0;
-        }
-
-        section.lodging > ul {
-          padding-left: 0.75em;
-          margin-bottom: 0;
-          list-style: none;
-        }
-
-        section.lodging > ul > li {
-            padding-left: 1em;
-            padding-bottom: 0.1em;
-            position: relative;
-
-            &:after {
-              content: '';
-              height: 0.4em;
-              width: 0.4em;
-
-              background: var(--gold);
-              display: block;
-              position: absolute;
-              transform: rotate(45deg);
-
-              top: 0.25em;
-              left: 0;
-            }
-        }
-
-        section.lodging > ul > li > a {
-          font-weight: lighter;
-        }
     </style>
   </head>
   <body>
     <header class="double-border">
-      <h1>
-      <div class="name">&middot; &middot; &middot; &middot; &middot; <i>Jacob's</i> &middot; &middot; &middot; &middot; &middot;</div>
-      <!-- <div class="name"><i>Jacob's</i></div> -->
-      <div class="title">Roaring 40<sup>th</sup></div>
-      </h1>
+      <h1>Jacob's <br/>Roaring 40<sup>th</sup></h1></h1>
     </header>
   </body>
 </html>
