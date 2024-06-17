@@ -1,5 +1,9 @@
 #!/bin/bash
+#
+# curl -Lks http://jayekub.github.io/dot.sh | /bin/bash
+#
 # based on https://www.atlassian.com/git/tutorials/dotfiles
+
 
 cd $HOME
 
