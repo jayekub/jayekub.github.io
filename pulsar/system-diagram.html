@@ -459,9 +459,29 @@
     font-style: italic;
     margin-top: 6px;
   }
+
+  /* ── Nav bar ─────────────────────────── */
+  .topnav {
+    position: sticky; top: 0; z-index: 100;
+    backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+    background: rgba(10,14,23,0.8); border-bottom: 1px solid var(--border);
+    display: flex; justify-content: center; align-items: center; gap: 24px;
+    padding: 0 20px; height: 44px; font-size: 0.75rem;
+  }
+  .topnav a { color: var(--text-dim); text-decoration: none; transition: color 0.2s; }
+  .topnav a:hover { color: var(--text-bright); }
+  .topnav .brand { font-weight: 700; color: var(--text-bright); font-size: 0.82rem; letter-spacing: -0.02em; }
+  .topnav .active { color: var(--cyan); }
 </style>
 </head>
 <body>
+
+<div class="topnav">
+  <a href="index.html" class="brand">Pulsar</a>
+  <a href="index.html">Overview</a>
+  <a href="system-diagram.html" class="active">Architecture</a>
+  <a href="spec.html">Specification</a>
+</div>
 
 <div class="header">
   <h1>Pulsar Detection & Tracking Architecture</h1>

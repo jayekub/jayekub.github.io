@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulsar &mdash; Technical Specification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  :root {
+    --bg: #0a0e17;
+    --bg2: #0f1623;
+    --bg-code: #0c111b;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+    --heading: #f8fafc;
+    --cyan: #06b6d4;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --pink: #ec4899;
+    --yellow: #eab308;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+  /* Layout */
+  .page { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+  @media (max-width: 900px) { .page { grid-template-columns: 1fr; } .sidebar { display: none; } }
+
+  /* Sidebar / TOC */
+  .sidebar {
+    position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 24px 16px;
+    border-right: 1px solid var(--border); background: var(--bg); font-size: 0.72rem;
+    scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .sidebar .logo { font-weight: 700; font-size: 0.9rem; color: var(--heading); margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+  .sidebar nav a {
+    display: block; padding: 4px 10px; color: var(--text3); text-decoration: none;
+    border-radius: 4px; transition: all 0.15s; margin: 1px 0; line-height: 1.4;
+  }
+  .sidebar nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+  .sidebar nav a.active { color: var(--cyan); background: rgba(6,182,212,0.08); }
+  .sidebar .sub { padding-left: 12px; }
+  .sidebar .sep { height: 1px; background: var(--border); margin: 10px 0; }
+  .sidebar .links { margin-top: 16px; }
+  .sidebar .links a { font-size: 0.68rem; color: var(--blue); }
+
+  /* Main content */
+  main { max-width: 780px; margin: 0 auto; padding: 40px 32px 120px; }
+  @media (max-width: 900px) { main { padding: 24px 16px 80px; } }
+
+  /* Typography */
+  h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; color: var(--heading); margin-bottom: 8px; }
+  h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; color: var(--heading); margin: 56px 0 16px; padding-top: 24px; border-top: 1px solid var(--border); scroll-margin-top: 24px; }
+  h3 { font-size: 1.1rem; font-weight: 600; color: var(--heading); margin: 32px 0 12px; scroll-margin-top: 24px; }
+  h4 { font-size: 0.95rem; font-weight: 600; color: var(--heading); margin: 24px 0 8px; }
+  p { margin-bottom: 14px; font-size: 0.9rem; }
+  .subtitle { font-size: 0.85rem; color: var(--text2); margin-bottom: 24px; }
+  .meta { font-size: 0.75rem; color: var(--text3); margin-bottom: 32px; display: flex; gap: 16px; flex-wrap: wrap; }
+  .meta span { display: flex; align-items: center; gap: 4px; }
+
+  /* Lists */
+  ul, ol { margin: 0 0 14px 20px; font-size: 0.9rem; }
+  li { margin-bottom: 4px; }
+
+  /* Links */
+  a { color: var(--cyan); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* Code */
+  code {
+    font-family: var(--mono); background: rgba(255,255,255,0.06); padding: 1px 5px;
+    border-radius: 3px; font-size: 0.82em; color: var(--cyan);
+  }
+  pre {
+    background: var(--bg-code); border: 1px solid var(--border); border-radius: 10px;
+    padding: 16px 20px; margin: 14px 0 18px; overflow-x: auto;
+    font-family: var(--mono); font-size: 0.78rem; line-height: 1.7; color: var(--text);
+  }
+  pre .kw { color: var(--pink); }
+  pre .ty { color: var(--cyan); }
+  pre .fn { color: var(--green); }
+  pre .cm { color: var(--text3); font-style: italic; }
+  pre .str { color: var(--orange); }
+  pre .num { color: var(--purple); }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; font-size: 0.82rem; }
+  th { text-align: left; font-weight: 600; color: var(--heading); padding: 8px 12px; border-bottom: 2px solid var(--border); }
+  td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); color: var(--text2); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Diagrams */
+  .diagram-box {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; margin: 18px 0; overflow-x: auto;
+  }
+  .diagram-box svg { width: 100%; max-width: 700px; display: block; margin: 0 auto; }
+  .diagram-caption { text-align: center; font-size: 0.72rem; color: var(--text3); margin-top: 10px; font-style: italic; }
+
+  /* Packet viz */
+  .packet-viz { display: flex; gap: 0; font-size: 0.75rem; margin: 14px 0; }
+  .pkt-s { padding: 10px 14px; text-align: center; border: 1px solid var(--border); }
+  .pkt-s:first-child { border-radius: 8px 0 0 8px; }
+  .pkt-s:last-child { border-radius: 0 8px 8px 0; }
+  .pkt-s:not(:first-child) { border-left: none; }
+  .pkt-s .pkt-n { font-weight: 600; }
+  .pkt-s .pkt-d { font-size: 0.65rem; color: var(--text3); margin-top: 2px; }
+
+  /* State machine */
+  .state-flow { display: flex; align-items: center; gap: 0; flex-wrap: wrap; margin: 12px 0; }
+  .st { padding: 5px 12px; border-radius: 16px; font-size: 0.72rem; font-weight: 500; font-family: var(--mono); white-space: nowrap; }
+  .st-arr { padding: 0 6px; color: var(--text3); font-size: 0.8rem; }
+  .st-idle { background: rgba(148,163,184,0.12); color: #94a3b8; }
+  .st-work { background: rgba(59,130,246,0.12); color: var(--blue); }
+  .st-recv { background: rgba(245,158,11,0.12); color: var(--orange); }
+  .st-ok   { background: rgba(16,185,129,0.12); color: var(--green); }
+  .st-err  { background: rgba(239,68,68,0.12); color: var(--red); }
+
+  /* Callout */
+  .callout {
+    background: rgba(6,182,212,0.06); border-left: 3px solid var(--cyan);
+    padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 14px 0;
+    font-size: 0.85rem;
+  }
+  .callout.warn { background: rgba(245,158,11,0.06); border-color: var(--orange); }
+  .callout strong { color: var(--heading); }
+
+  /* File tree */
+  .filetree { font-family: var(--mono); font-size: 0.75rem; line-height: 1.8; color: var(--text2); }
+  .filetree .dir { color: var(--blue); font-weight: 500; }
+  .filetree .file { color: var(--text); }
+  .filetree .desc { color: var(--text3); }
+
+  /* Phase badges */
+  .phase { display: inline-block; font-size: 0.65rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
+  .phase-done { background: rgba(16,185,129,0.12); color: var(--green); }
+  .phase-cur  { background: rgba(59,130,246,0.12); color: var(--blue); }
+  .phase-plan { background: rgba(234,179,8,0.12); color: var(--yellow); }
+
+  /* Glossary */
+  .glossary dt { font-weight: 600; color: var(--heading); margin-top: 10px; font-size: 0.9rem; }
+  .glossary dd { color: var(--text2); margin-left: 0; margin-bottom: 6px; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ══════ SIDEBAR ══════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 18 18"><circle cx="9" cy="9" r="7" fill="none" stroke="var(--cyan)" stroke-width="1.5"/><circle cx="9" cy="9" r="2.5" fill="var(--cyan)"/></svg>
+    Pulsar Spec
+  </div>
+  <nav>
+    <a href="#s1">1. Purpose</a>
+    <a href="#s2">2. System Overview</a>
+    <a href="#s3" class="sub">2.1 Pipeline</a>
+    <a href="#s2-2" class="sub">2.2 Transmission</a>
+    <a href="#s3h">3. Protocol Layer</a>
+    <a href="#s3-1" class="sub">3.1 Packet Structure</a>
+    <a href="#s3-2" class="sub">3.2 Parameters</a>
+    <a href="#s3-3" class="sub">3.3 Timing</a>
+    <a href="#s4">4. Core Interfaces</a>
+    <a href="#s4-1" class="sub">4.1 Symbol</a>
+    <a href="#s4-2" class="sub">4.2 EncodingStrategy</a>
+    <a href="#s4-3" class="sub">4.3 Encoder</a>
+    <a href="#s4-4" class="sub">4.4 Classifier</a>
+    <a href="#s4-5" class="sub">4.5 Decoder</a>
+    <a href="#s4-6" class="sub">4.6 LEDDetector</a>
+    <a href="#s4-7" class="sub">4.7 TrackMatcher</a>
+    <a href="#s4-8" class="sub">4.8 Track</a>
+    <a href="#s4-9" class="sub">4.9 Lifecycle</a>
+    <a href="#s5">5. Transmitter</a>
+    <a href="#s6">6. Camera &amp; Sensing</a>
+    <a href="#s6-2" class="sub">6.2 Calibration</a>
+    <a href="#s7">7. World Model</a>
+    <a href="#s8">8. RGB Diff. Phase</a>
+    <a href="#s9">9. Project Structure</a>
+    <a href="#s10">10. Testing</a>
+    <a href="#s11">11. Phases</a>
+    <a href="#s12">12. Open Questions</a>
+    <a href="#glossary">Glossary</a>
+    <div class="sep"></div>
+    <div class="links">
+      <a href="index.html">Explainer</a><br>
+      <a href="system-diagram.html">Architecture Diagram</a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ══════ MAIN ══════ -->
+<main>
+
+<h1>Pulsar &mdash; Technical Specification</h1>
+<p class="subtitle">Spatial LED Mapping System</p>
+<div class="meta">
+  <span>Version 0.1</span>
+  <span>Status: Draft</span>
+  <span>Prefix: PLSR</span>
+</div>
+
+<!-- ── 1. PURPOSE ────────────────────── -->
+<h2 id="s1">1. Purpose</h2>
+<p>Pulsar is a system for spatially mapping addressable LEDs using an iPhone camera. It visually identifies individual LEDs by decoding flashing light sequences, then reconstructs their 3D positions in ARKit space.</p>
+
+<h3>North Star Use Case</h3>
+<p>A user has a tree wrapped with 900 addressable LEDs (5cm spacing along the string, &ge;5cm between wraps). They open the app, point the camera at the tree, and slowly walk around it. The app provides real-time feedback guiding pace and direction. After one walkabout, every LED has a confirmed ID and 3D position.</p>
+<p>Once mapping is complete, the user can:</p>
+<ul>
+  <li>Visualize the resulting point cloud in 3D</li>
+  <li>Send diagnostic patterns (3D sweeps, planes, waves) to confirm positional accuracy</li>
+  <li>Export the mapping for use in LED animation software</li>
+</ul>
+
+<h3>Design Principles</h3>
+<ol>
+  <li><strong>Pluggable strategies.</strong> Encoding, classification, detection, and matching algorithms are swappable behind stable interfaces.</li>
+  <li><strong>Test-driven development.</strong> Every component is developed test-first. The Swift Package must be testable with <code>swift test</code>.</li>
+  <li><strong>Debuggability.</strong> All pipeline components expose internal state for visualization. Debug UI is a first-class concern.</li>
+</ol>
+
+<!-- ── 2. SYSTEM OVERVIEW ────────────── -->
+<h2 id="s2">2. System Overview</h2>
+
+<h3 id="s3">2.1 High-Level Pipeline</h3>
+
+<div class="diagram-box">
+  <svg viewBox="0 0 700 340" fill="none">
+    <!-- TX side -->
+    <text x="100" y="20" text-anchor="middle" fill="var(--text3)" font-size="11" font-weight="600" font-family="Inter,sans-serif">TRANSMITTER</text>
+    <rect x="40" y="32" width="120" height="36" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)"/>
+    <text x="100" y="55" text-anchor="middle" fill="var(--orange)" font-size="10" font-family="Inter,sans-serif" font-weight="500">LED Controller</text>
+    <line x1="100" y1="68" x2="100" y2="94" stroke="var(--border)" stroke-width="1"/>
+    <rect x="40" y="94" width="120" height="36" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)"/>
+    <text x="100" y="117" text-anchor="middle" fill="var(--orange)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Encoding Strategy</text>
+    <line x1="100" y1="130" x2="100" y2="156" stroke="var(--border)" stroke-width="1"/>
+    <rect x="40" y="156" width="120" height="36" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)"/>
+    <text x="100" y="179" text-anchor="middle" fill="var(--orange)" font-size="10" font-family="Inter,sans-serif" font-weight="500">LED Hardware</text>
+
+    <!-- Photon arrow -->
+    <path d="M160 174 L280 174" stroke="var(--yellow)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrowY)"/>
+    <text x="220" y="168" text-anchor="middle" fill="var(--yellow)" font-size="8" font-family="Inter,sans-serif" font-style="italic" opacity="0.7">photons</text>
+    <defs><marker id="arrowY" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5" fill="var(--yellow)"/></marker></defs>
+
+    <!-- RX side -->
+    <text x="400" y="20" text-anchor="middle" fill="var(--text3)" font-size="11" font-weight="600" font-family="Inter,sans-serif">RECEIVER (iPhone)</text>
+    <rect x="310" y="32" width="180" height="36" rx="8" fill="rgba(236,72,153,0.06)" stroke="rgba(236,72,153,0.2)"/>
+    <text x="400" y="55" text-anchor="middle" fill="var(--pink)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Camera Capture</text>
+    <line x1="400" y1="68" x2="400" y2="88" stroke="var(--border)" stroke-width="1" marker-end="url(#arrowD)"/>
+
+    <rect x="310" y="94" width="180" height="36" rx="8" fill="rgba(6,182,212,0.06)" stroke="rgba(6,182,212,0.2)"/>
+    <text x="400" y="117" text-anchor="middle" fill="var(--cyan)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Detect (LED candidates)</text>
+    <line x1="400" y1="130" x2="400" y2="150" stroke="var(--border)" stroke-width="1" marker-end="url(#arrowD)"/>
+
+    <rect x="310" y="156" width="180" height="36" rx="8" fill="rgba(139,92,246,0.06)" stroke="rgba(139,92,246,0.2)"/>
+    <text x="400" y="179" text-anchor="middle" fill="var(--purple)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Track (match to tracks)</text>
+    <line x1="400" y1="192" x2="400" y2="212" stroke="var(--border)" stroke-width="1" marker-end="url(#arrowD)"/>
+
+    <rect x="310" y="218" width="180" height="36" rx="8" fill="rgba(245,158,11,0.06)" stroke="rgba(245,158,11,0.2)"/>
+    <text x="400" y="241" text-anchor="middle" fill="var(--orange)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Classify (pixel &rarr; symbol)</text>
+    <line x1="400" y1="254" x2="400" y2="274" stroke="var(--border)" stroke-width="1" marker-end="url(#arrowD)"/>
+
+    <rect x="310" y="280" width="180" height="36" rx="8" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.2)"/>
+    <text x="400" y="303" text-anchor="middle" fill="var(--green)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Decode (symbols &rarr; LED ID)</text>
+
+    <defs><marker id="arrowD" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5" fill="var(--text3)"/></marker></defs>
+
+    <!-- Phase 5 -->
+    <rect x="570" y="280" width="120" height="36" rx="8" fill="none" stroke="rgba(234,179,8,0.2)" stroke-dasharray="4 3"/>
+    <text x="630" y="303" text-anchor="middle" fill="var(--yellow)" font-size="10" font-family="Inter,sans-serif" font-weight="500" opacity="0.6">World Model</text>
+    <text x="630" y="316" text-anchor="middle" fill="var(--yellow)" font-size="7" font-family="Inter,sans-serif" opacity="0.4">PHASE 5</text>
+    <path d="M490 298 L570 298" stroke="rgba(234,179,8,0.15)" stroke-width="1" stroke-dasharray="4 3" marker-end="url(#arrowP)"/>
+    <defs><marker id="arrowP" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5" fill="rgba(234,179,8,0.3)"/></marker></defs>
+  </svg>
+  <div class="diagram-caption">Fig 1. High-level pipeline &mdash; transmitter and receiver sides</div>
+</div>
+
+<h3 id="s2-2">2.2 Transmission Model</h3>
+<p>All LEDs transmit simultaneously and continuously in a loop:</p>
+
+<div class="packet-viz">
+  <div class="pkt-s" style="background:rgba(148,163,184,0.05);"><div class="pkt-n" style="color:var(--text);">Preamble</div><div class="pkt-d">N symbols</div></div>
+  <div class="pkt-s" style="background:rgba(139,92,246,0.04);"><div class="pkt-n" style="color:var(--purple);">Sync</div><div class="pkt-d">1 symbol</div></div>
+  <div class="pkt-s" style="background:rgba(59,130,246,0.04);"><div class="pkt-n" style="color:var(--blue);">Header</div><div class="pkt-d">4 bits</div></div>
+  <div class="pkt-s" style="background:rgba(6,182,212,0.04); flex:1;"><div class="pkt-n" style="color:var(--cyan);">Address</div><div class="pkt-d">variable</div></div>
+  <div class="pkt-s" style="background:rgba(16,185,129,0.04);"><div class="pkt-n" style="color:var(--green);">CRC</div><div class="pkt-d">4|8 bits</div></div>
+  <div class="pkt-s" style="background:rgba(255,255,255,0.02);"><div class="pkt-n" style="color:var(--text3);">Idle</div><div class="pkt-d">config</div></div>
+</div>
+
+<p>Addresses are <strong>variable-length</strong>: each LED transmits only as many address bits as needed for its own ID (<code>ceil(log2(id + 1))</code>, minimum 4 bits, padded to nibble boundary). Low-numbered LEDs have shorter packets and retransmit faster, which also causes LEDs to naturally fall out of phase with each other.</p>
+
+<!-- ── 3. PROTOCOL LAYER ─────────────── -->
+<h2 id="s3h">3. The Protocol Layer</h2>
+
+<h3 id="s3-1">3.1 Packet Structure</h3>
+
+<table>
+  <tr><th>Field</th><th>Size</th><th>Description</th></tr>
+  <tr><td>Calibration Preamble</td><td>N symbols</td><td>Known symbol sequence for per-LED classifier tuning</td></tr>
+  <tr><td>Sync</td><td>1 symbol</td><td>Distinctive signal marking start of data</td></tr>
+  <tr><td>Header</td><td>4 bits</td><td>Encodes address length in nibbles</td></tr>
+  <tr><td>Address</td><td>Variable</td><td>LED ID. <code>ceil(log2(id + 1))</code> bits, min 4, padded to nibble</td></tr>
+  <tr><td>CRC</td><td>4 or 8 bits</td><td>Integrity check. CRC-8 recommended for &gt;256 LEDs</td></tr>
+  <tr><td>Idle</td><td>Configurable</td><td>Gap between retransmissions. Default 0</td></tr>
+</table>
+
+<h3 id="s3-2">3.2 Configurable Parameters</h3>
+
+<h4>Protocol Parameters</h4>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+  <tr><td><code>symbolRate</code></td><td>Hz</td><td>10</td><td>Symbols per second. Range: 5&ndash;15</td></tr>
+  <tr><td><code>crcBits</code></td><td>Int</td><td>8</td><td>4 for small installations, 8 for &gt;256</td></tr>
+  <tr><td><code>calibrationEnabled</code></td><td>Bool</td><td>true</td><td>Include calibration preamble</td></tr>
+  <tr><td><code>idleDuration</code></td><td>ms</td><td>0</td><td>Pause between retransmissions</td></tr>
+</table>
+
+<h4>Image Processing Parameters</h4>
+<table>
+  <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Notes</th></tr>
+  <tr><td><code>downsampleFactor</code></td><td>Float</td><td>0.25</td><td>Scale factor for detection input</td></tr>
+  <tr><td><code>medianFilterEnabled</code></td><td>Bool</td><td>true</td><td>3x3 median for noise reduction</td></tr>
+  <tr><td><code>detectionThreshold</code></td><td>Float</td><td>0.3</td><td>Brightness threshold (max-channel)</td></tr>
+  <tr><td><code>minCandidateArea</code></td><td>Float</td><td>4.0</td><td>Minimum area in pixels</td></tr>
+  <tr><td><code>maxCandidateArea</code></td><td>Float</td><td>10000.0</td><td>Maximum area (reflections, merges)</td></tr>
+  <tr><td><code>morphCloseEnabled</code></td><td>Bool</td><td>false</td><td>Dilation&rarr;erosion, can bridge blobs</td></tr>
+  <tr><td><code>maxEccentricity</code></td><td>Float</td><td>0.85</td><td>Rejects elongated/merged blobs</td></tr>
+</table>
+
+<h3 id="s3-3">3.3 Packet Timing Examples (900 LEDs, 10 Hz)</h3>
+<div class="callout">
+  <strong>LED 0</strong> (minimum address = 4 bits): Preamble 5 + Sync 1 + Header 4 + Address 4 + CRC-8 8 = <strong>22 symbols = 2.2 seconds</strong><br>
+  <strong>LED 899</strong> (address = 12 bits): Preamble 5 + Sync 1 + Header 4 + Address 12 + CRC-8 8 = <strong>30 symbols = 3.0 seconds</strong>
+</div>
+<p>Worst case for a newly visible LED: ~2 cycles to decode (first may start mid-packet).</p>
+
+<!-- ── 4. CORE INTERFACES ────────────── -->
+<h2 id="s4">4. Core Interfaces</h2>
+<p>All interfaces are defined as Swift protocols. Implementations are swappable strategies.</p>
+
+<h3 id="s4-1">4.1 Symbol</h3>
+<pre>
+<span class="kw">enum</span> <span class="ty">Symbol</span>: <span class="ty">Hashable</span>, <span class="ty">Sendable</span> {
+    <span class="cm">// RGB Differential Phase symbols</span>
+    <span class="kw">case</span> red, green, blue
+
+    <span class="cm">// Sync / preamble</span>
+    <span class="kw">case</span> white
+
+    <span class="cm">// Luminance-based symbols</span>
+    <span class="kw">case</span> bright, dim
+
+    <span class="cm">// Sentinel</span>
+    <span class="kw">case</span> unknown
+}
+</pre>
+<p>New encoding strategies may require adding cases. This is an intentional tradeoff: a small shared enum is simpler than generic type parameters threading through the pipeline.</p>
+
+<h3 id="s4-2">4.2 Encoding Strategy</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">EncodingStrategy</span> {
+    <span class="kw">var</span> name: <span class="ty">String</span> { <span class="kw">get</span> }
+    <span class="kw">var</span> calibrationSequence: [<span class="ty">Symbol</span>] { <span class="kw">get</span> }
+    <span class="kw">var</span> syncSymbol: <span class="ty">Symbol</span> { <span class="kw">get</span> }
+
+    <span class="kw">func</span> <span class="fn">makeEncoder</span>() -> <span class="ty">SymbolEncoder</span>
+    <span class="kw">func</span> <span class="fn">makeClassifier</span>() -> <span class="ty">SymbolClassifier</span>
+    <span class="kw">func</span> <span class="fn">makeDecoder</span>() -> <span class="ty">SymbolDecoder</span>
+}
+</pre>
+
+<h3 id="s4-3">4.3 Encoder (Transmit Side)</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">SymbolEncoder</span> {
+    <span class="kw">func</span> <span class="fn">encodePacket</span>(ledID: <span class="ty">UInt16</span>, ledCount: <span class="ty">UInt16</span>) -> [<span class="ty">Symbol</span>]
+    <span class="kw">func</span> <span class="fn">color</span>(<span class="kw">for</span> symbol: <span class="ty">Symbol</span>) -> <span class="ty">LEDColor</span>
+}
+</pre>
+
+<h3 id="s4-4">4.4 Symbol Classifier (Receive Side)</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">SymbolClassifier</span> {
+    <span class="kw">func</span> <span class="fn">classify</span>(sample: <span class="ty">PixelSample</span>) -> <span class="ty">Symbol</span>?
+    <span class="kw">func</span> <span class="fn">calibrate</span>(knownSamples: [(<span class="kw">expected</span>: <span class="ty">Symbol</span>, <span class="kw">observed</span>: <span class="ty">PixelSample</span>)])
+    <span class="kw">func</span> <span class="fn">reset</span>()
+}
+
+<span class="kw">struct</span> <span class="ty">PixelSample</span>: <span class="ty">Sendable</span> {
+    <span class="kw">let</span> channels: [<span class="ty">Float</span>]   <span class="cm">// e.g. [r, g, b]</span>
+    <span class="kw">let</span> timestamp: <span class="ty">TimeInterval</span>
+}
+</pre>
+
+<h3 id="s4-5">4.5 Decoder (Receive Side)</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">SymbolDecoder</span> {
+    <span class="kw">mutating func</span> <span class="fn">feed</span>(_ symbol: <span class="ty">Symbol</span>?) -> <span class="ty">DecodeResult</span>
+    <span class="kw">mutating func</span> <span class="fn">reset</span>()
+}
+
+<span class="kw">enum</span> <span class="ty">DecodeResult</span>: <span class="ty">Equatable</span>, <span class="ty">Sendable</span> {
+    <span class="kw">case</span> idle
+    <span class="kw">case</span> calibrating
+    <span class="kw">case</span> synced
+    <span class="kw">case</span> receiving(<span class="ty">Int</span>)
+    <span class="kw">case</span> decoded(<span class="ty">UInt16</span>)
+    <span class="kw">case</span> failed(<span class="ty">DecodeError</span>)
+}
+</pre>
+
+<div class="state-flow">
+  <span class="st st-idle">.idle</span><span class="st-arr">&rarr;</span>
+  <span class="st st-work">.calibrating</span><span class="st-arr">&rarr;</span>
+  <span class="st st-work">.synced</span><span class="st-arr">&rarr;</span>
+  <span class="st st-recv">.receiving(n)</span><span class="st-arr">&rarr;</span>
+  <span class="st st-ok">.decoded(id)</span>
+</div>
+<div style="margin-left: 56px; margin-top: 4px;">
+  <span class="st-arr">&searr;</span> <span class="st st-err">.failed(error)</span>
+</div>
+
+<h3 id="s4-6">4.6 LED Detector</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">LEDDetector</span> {
+    <span class="kw">func</span> <span class="fn">detect</span>(<span class="kw">in</span> frame: <span class="ty">FrameData</span>) -> [<span class="ty">LEDCandidate</span>]
+}
+
+<span class="kw">struct</span> <span class="ty">LEDCandidate</span>: <span class="ty">Identifiable</span>, <span class="ty">Sendable</span> {
+    <span class="kw">let</span> id: <span class="ty">UUID</span>
+    <span class="kw">let</span> centroid: <span class="ty">CGPoint</span>
+    <span class="kw">let</span> boundingBox: <span class="ty">CGRect</span>
+    <span class="kw">let</span> averagePixel: <span class="ty">PixelSample</span>
+    <span class="kw">let</span> area: <span class="ty">Float</span>
+    <span class="kw">let</span> eccentricity: <span class="ty">Float</span>   <span class="cm">// 0.0 = circle, 1.0 = line</span>
+    <span class="kw">let</span> confidence: <span class="ty">Float</span>     <span class="cm">// 1.0 - eccentricity</span>
+}
+
+<span class="kw">struct</span> <span class="ty">FrameData</span>: <span class="ty">Sendable</span> {
+    <span class="kw">let</span> pixelBuffer: <span class="ty">CVPixelBuffer</span>
+    <span class="kw">let</span> timestamp: <span class="ty">TimeInterval</span>
+    <span class="kw">let</span> cameraTransform: <span class="ty">simd_float4x4</span>?
+}
+</pre>
+
+<p><strong>ThresholdDetector</strong> pipeline: CIImage downsampling &rarr; <code>CIMaximumComponent</code> for max-channel brightness &rarr; <code>CIMedianFilter</code> (3x3) &rarr; threshold &rarr; morphological open (+ optional close) &rarr; two-pass union-find CCL with second-moment accumulation for eccentricity.</p>
+
+<div class="callout">
+  <strong>CandidateNursery:</strong> Temporal validation layer between detector and track creation. Proto-candidates must appear for <code>promotionFrames</code> (default 3) consecutive frames before promotion. Eliminates single-frame noise spikes. Stale protos are evicted after <code>lostFrames</code> (default 2) frames of absence.
+</div>
+
+<h3 id="s4-7">4.7 Track Matcher</h3>
+<pre>
+<span class="kw">protocol</span> <span class="ty">TrackMatcher</span> {
+    <span class="kw">mutating func</span> <span class="fn">addTrack</span>(_ track: <span class="ty">Track</span>)
+    <span class="kw">mutating func</span> <span class="fn">removeTrack</span>(_ id: <span class="ty">Track.ID</span>)
+    <span class="kw">mutating func</span> <span class="fn">updateTrackPosition</span>(_ id: <span class="ty">Track.ID</span>, position: <span class="ty">CGPoint</span>)
+    <span class="kw">func</span> <span class="fn">match</span>(candidates: [<span class="ty">LEDCandidate</span>], frameDelta: <span class="ty">TimeInterval</span>) -> <span class="ty">MatchResult</span>
+}
+
+<span class="kw">struct</span> <span class="ty">MatchResult</span>: <span class="ty">Sendable</span> {
+    <span class="kw">let</span> assignments: [<span class="ty">LEDCandidate.ID</span>: <span class="ty">Track.ID</span>]
+    <span class="kw">let</span> newCandidates: [<span class="ty">LEDCandidate</span>]
+    <span class="kw">let</span> lostTrackIDs: <span class="ty">Set</span>&lt;<span class="ty">Track.ID</span>&gt;
+}
+</pre>
+
+<h4>4.7.1 Motion Estimation</h4>
+<p>The default <strong>SmoothedMotionEstimator</strong> uses exponential moving average:</p>
+<pre>v_smoothed = &alpha; &times; v_raw + (1 - &alpha;) &times; v_prev    <span class="cm">// &alpha; = 0.4</span></pre>
+
+<h4>4.7.2 Adaptive Search Radius</h4>
+<pre>searchRadius = min(maxSearchRadius, baseDistance + speed &times; &Delta;t &times; velocityMultiplier)</pre>
+<p>Stationary: ~50 px. Fast pan (2000 px/s): ~149 px. Capped at 200 px.</p>
+
+<h3 id="s4-8">4.8 Track</h3>
+<pre>
+<span class="kw">class</span> <span class="ty">Track</span>: <span class="ty">Identifiable</span>, <span class="ty">Observable</span> {
+    <span class="kw">let</span> id: <span class="ty">UUID</span>
+    <span class="kw">var</span> position: <span class="ty">CGPoint</span>
+    <span class="kw">var</span> velocity: <span class="ty">CGPoint</span>
+    <span class="kw">var</span> symbolBuffer: [<span class="ty">SymbolSample</span>]
+    <span class="kw">var</span> state: <span class="ty">TrackState</span>
+    <span class="kw">var</span> lastSeenTime: <span class="ty">TimeInterval</span>
+    <span class="kw">var</span> framesLost: <span class="ty">Int</span>
+    <span class="kw">var</span> stateHistory: [<span class="ty">StateTransition</span>]
+    <span class="kw">var</span> decodedID: <span class="ty">UInt16</span>? { <span class="cm">/* computed */</span> }
+}
+
+<span class="kw">enum</span> <span class="ty">TrackState</span>: <span class="ty">Equatable</span>, <span class="ty">Sendable</span> {
+    <span class="kw">case</span> new, preambleSearch
+    <span class="kw">case</span> receiving(symbolCount: <span class="ty">Int</span>)
+    <span class="kw">case</span> validating
+    <span class="kw">case</span> decoded(<span class="ty">UInt16</span>)
+    <span class="kw">case</span> failed(<span class="ty">DecodeError</span>)
+}
+</pre>
+
+<h3 id="s4-9">4.9 Track Lifecycle</h3>
+<div class="state-flow">
+  <span class="st st-idle">.new</span><span class="st-arr">&rarr;</span>
+  <span class="st st-work">.preambleSearch</span><span class="st-arr">&rarr;</span>
+  <span class="st st-recv">.receiving</span><span class="st-arr">&rarr;</span>
+  <span class="st st-work">.validating</span><span class="st-arr">&rarr;</span>
+  <span class="st st-ok">.decoded(id)</span>
+</div>
+<div style="margin-left: 170px; margin-top: 4px;">
+  <span class="st-arr">&searr;</span> <span class="st st-err">.failed</span> <span class="st-arr">&rarr;</span> <span class="st st-work">.preambleSearch</span> <span style="font-size:0.7rem;color:var(--text3);">(retry)</span>
+</div>
+
+<div class="callout warn" style="margin-top: 16px;">
+  <strong>Garbage collection:</strong> Any track with <code>framesLost &gt; threshold</code> AND state != <code>.decoded</code> is destroyed. Decoded tracks with high loss are removed from matching but persisted in the world model.
+</div>
+
+<!-- ── 5. TRANSMITTER ────────────────── -->
+<h2 id="s5">5. Transmitter Layer</h2>
+<pre>
+<span class="kw">protocol</span> <span class="ty">LEDTransmitter</span> {
+    <span class="kw">func</span> <span class="fn">startTransmission</span>(ledCount: <span class="ty">UInt16</span>, encoder: <span class="ty">SymbolEncoder</span>, symbolRate: <span class="ty">Double</span>) <span class="kw">async</span>
+    <span class="kw">func</span> <span class="fn">stopTransmission</span>()
+}
+</pre>
+<table>
+  <tr><th>Strategy</th><th>Transport</th><th>Use Case</th></tr>
+  <tr><td><code>MockScreenDriver</code></td><td>macOS display</td><td>Local debugging, zero latency</td></tr>
+  <tr><td><code>DDPNetworkDriver</code></td><td>UDP to WLED</td><td>Real hardware, Wi-Fi</td></tr>
+  <tr><td><code>FirmwareDriver</code></td><td>ESP32 on-chip</td><td>Custom firmware (future)</td></tr>
+</table>
+
+<!-- ── 6. CAMERA ─────────────────────── -->
+<h2 id="s6">6. Camera & Sensing Layer</h2>
+
+<h3>6.1 Camera Configuration</h3>
+<table>
+  <tr><th>Setting</th><th>Policy</th></tr>
+  <tr><td>Auto-exposure</td><td>OFF. User-adjustable slider</td></tr>
+  <tr><td>Auto white balance</td><td>Continuous auto during capture, locked via calibration</td></tr>
+  <tr><td>Auto focus</td><td>ON by default</td></tr>
+  <tr><td>Exposure/ISO</td><td>Empirical defaults + slider. Auto-calibrated when connected</td></tr>
+</table>
+
+<h3 id="s6-2">6.2 Preview & Calibration Phase</h3>
+
+<div class="diagram-box">
+  <svg viewBox="0 0 600 200" fill="none">
+    <rect x="20" y="20" width="120" height="40" rx="8" fill="rgba(139,92,246,0.06)" stroke="rgba(139,92,246,0.2)"/>
+    <text x="80" y="45" text-anchor="middle" fill="var(--purple)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Connect</text>
+    <path d="M140 40 L180 40" stroke="var(--border)" marker-end="url(#arrowD)"/>
+
+    <rect x="190" y="12" width="180" height="56" rx="8" fill="rgba(59,130,246,0.06)" stroke="rgba(59,130,246,0.2)"/>
+    <text x="280" y="35" text-anchor="middle" fill="var(--blue)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Preview / Calibration</text>
+    <text x="280" y="52" text-anchor="middle" fill="var(--text3)" font-size="8" font-family="Inter,sans-serif">WB cal &bull; Segment blink &bull; All white</text>
+    <path d="M370 40 L410 40" stroke="var(--border)" marker-end="url(#arrowD)"/>
+
+    <rect x="420" y="20" width="160" height="40" rx="8" fill="rgba(16,185,129,0.06)" stroke="rgba(16,185,129,0.2)"/>
+    <text x="500" y="45" text-anchor="middle" fill="var(--green)" font-size="10" font-family="Inter,sans-serif" font-weight="500">Scanning</text>
+
+    <!-- Return arrow -->
+    <path d="M500 60 L500 90 L80 90 L80 60" stroke="var(--text3)" stroke-width="0.8" fill="none" stroke-dasharray="3 2" marker-end="url(#arrowD)"/>
+    <text x="290" y="86" text-anchor="middle" fill="var(--text3)" font-size="7" font-family="Inter,sans-serif">[Stop Scan]</text>
+
+    <!-- Labels -->
+    <text x="160" y="32" text-anchor="middle" fill="var(--text3)" font-size="7" font-family="Inter,sans-serif">onReady</text>
+    <text x="393" y="32" text-anchor="middle" fill="var(--text3)" font-size="7" font-family="Inter,sans-serif">[Start]</text>
+  </svg>
+  <div class="diagram-caption">Fig 2. Session lifecycle: connect &rarr; preview/calibrate &rarr; scan</div>
+</div>
+
+<h4>6.2.2 White Balance Calibration</h4>
+<p>During preview, all LEDs illuminate white. The observed RGB imbalance reveals camera WB error. After N samples (default 10), correction ratios are computed and locked.</p>
+
+<h4>6.2.3&ndash;6.2.4 Exposure & Symbol Rate Calibration</h4>
+<p>Future features. Exposure calibration will analyze LED brightness profiles to find optimal settings. Symbol rate calibration will flash patterns at increasing rates to find the maximum reliable rate for current conditions.</p>
+
+<!-- ── 7. WORLD MODEL ────────────────── -->
+<h2 id="s7">7. World Model <span class="phase phase-plan">PHASE 5</span></h2>
+<p>3D reconstruction, ARKit integration, and topology interpolation are deferred. The architecture supports this by cleanly separating the decode pipeline from 3D reconstruction.</p>
+<pre>
+<span class="kw">protocol</span> <span class="ty">WorldModel</span> {
+    <span class="kw">func</span> <span class="fn">recordObservation</span>(
+        ledID: <span class="ty">UInt16</span>,
+        pixelPosition: <span class="ty">CGPoint</span>,
+        cameraTransform: <span class="ty">simd_float4x4</span>,
+        timestamp: <span class="ty">TimeInterval</span>
+    )
+    <span class="kw">func</span> <span class="fn">position</span>(<span class="kw">for</span> ledID: <span class="ty">UInt16</span>) -> <span class="ty">simd_float3</span>?
+    <span class="kw">var</span> entries: [<span class="ty">WorldEntry</span>] { <span class="kw">get</span> }
+}
+</pre>
+
+<!-- ── 8. RGB DIFF PHASE ─────────────── -->
+<h2 id="s8">8. RGB Differential Phase Encoding</h2>
+
+<h3>8.1 Concept</h3>
+<p>Three colors (R, G, B) form a cycle. Data is encoded in the <strong>direction of transition</strong> between colors. Repeated frames of the same color are ignored &mdash; decoupling data from timing.</p>
+
+<h3>8.3 Bit Encoding</h3>
+
+<div class="diagram-box">
+  <svg viewBox="0 0 500 180" fill="none">
+    <!-- R circle -->
+    <circle cx="250" cy="40" r="28" fill="rgba(255,55,95,0.1)" stroke="var(--red)" stroke-width="1.5"/>
+    <text x="250" y="45" text-anchor="middle" fill="var(--red)" font-size="14" font-weight="700" font-family="Inter,sans-serif">R</text>
+    <!-- G circle -->
+    <circle cx="330" cy="140" r="28" fill="rgba(48,209,88,0.1)" stroke="var(--green)" stroke-width="1.5"/>
+    <text x="330" y="145" text-anchor="middle" fill="var(--green)" font-size="14" font-weight="700" font-family="Inter,sans-serif">G</text>
+    <!-- B circle -->
+    <circle cx="170" cy="140" r="28" fill="rgba(10,132,255,0.1)" stroke="var(--blue)" stroke-width="1.5"/>
+    <text x="170" y="145" text-anchor="middle" fill="var(--blue)" font-size="14" font-weight="700" font-family="Inter,sans-serif">B</text>
+    <!-- CW arrows (1) -->
+    <path d="M275 55 L310 118" stroke="var(--green)" stroke-width="1.5" marker-end="url(#aCW)"/>
+    <text x="305" y="82" fill="var(--green)" font-size="10" font-weight="600" font-family="var(--mono)">1</text>
+    <path d="M305 155 L198 155" stroke="var(--green)" stroke-width="1.5" marker-end="url(#aCW)"/>
+    <text x="252" y="168" fill="var(--green)" font-size="10" font-weight="600" font-family="var(--mono)">1</text>
+    <path d="M190 118 L225 55" stroke="var(--green)" stroke-width="1.5" marker-end="url(#aCW)"/>
+    <text x="195" y="82" fill="var(--green)" font-size="10" font-weight="600" font-family="var(--mono)">1</text>
+    <!-- CCW arrows (0) -->
+    <path d="M225 55 L190 118" stroke="var(--orange)" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#aCCW)"/>
+    <text x="195" y="96" fill="var(--orange)" font-size="10" font-weight="600" font-family="var(--mono)">0</text>
+    <path d="M198 155 L305 155" stroke="var(--orange)" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#aCCW)"/>
+    <text x="252" y="152" fill="var(--orange)" font-size="10" font-weight="600" font-family="var(--mono)">0</text>
+    <path d="M310 118 L275 55" stroke="var(--orange)" stroke-width="1" stroke-dasharray="4 2" marker-end="url(#aCCW)"/>
+    <text x="305" y="96" fill="var(--orange)" font-size="10" font-weight="600" font-family="var(--mono)">0</text>
+
+    <!-- Legend -->
+    <text x="410" y="80" fill="var(--green)" font-size="9" font-family="Inter,sans-serif" font-weight="500">&mdash; CW = bit 1</text>
+    <text x="410" y="100" fill="var(--orange)" font-size="9" font-family="Inter,sans-serif" font-weight="500">--- CCW = bit 0</text>
+    <text x="410" y="130" fill="var(--text3)" font-size="8" font-family="Inter,sans-serif">&Delta; = (curr - prev + 3) % 3</text>
+    <text x="410" y="144" fill="var(--text3)" font-size="8" font-family="Inter,sans-serif">&Delta;=0 &rarr; hold (ignore)</text>
+    <text x="410" y="158" fill="var(--text3)" font-size="8" font-family="Inter,sans-serif">&Delta;=1 &rarr; bit '1'</text>
+    <text x="410" y="172" fill="var(--text3)" font-size="8" font-family="Inter,sans-serif">&Delta;=2 &rarr; bit '0'</text>
+
+    <defs>
+      <marker id="aCW" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5" fill="var(--green)"/></marker>
+      <marker id="aCCW" markerWidth="6" markerHeight="5" refX="6" refY="2.5" orient="auto"><path d="M0,0 L6,2.5 L0,5" fill="var(--orange)"/></marker>
+    </defs>
+  </svg>
+  <div class="diagram-caption">Fig 3. RGB differential phase: clockwise transitions encode 1, counter-clockwise encode 0</div>
+</div>
+
+<h3>8.4 Calibration Preamble</h3>
+<p>When enabled: <code>White &rarr; Red &rarr; Green &rarr; Blue &rarr; White &rarr; [data begins]</code>. First White establishes white reference; R, G, B establish color anchors; second White marks the data boundary.</p>
+
+<h3>8.5 Classifier</h3>
+<pre>
+<span class="fn">classify</span>(r, g, b):
+  <span class="kw">if</span> max(r,g,b) < darknessThreshold &rarr; <span class="kw">nil</span>
+  <span class="kw">if</span> min(r,g,b) / max(r,g,b) > whiteTolerance &rarr; .white
+  <span class="kw">if</span> r > g <span class="kw">AND</span> r > b &rarr; .red
+  <span class="kw">if</span> g > r <span class="kw">AND</span> g > b &rarr; .green
+  <span class="kw">if</span> b > r <span class="kw">AND</span> b > g &rarr; .blue
+  <span class="kw">else</span> &rarr; <span class="kw">nil</span> (ambiguous)
+</pre>
+
+<!-- ── 9. PROJECT STRUCTURE ──────────── -->
+<h2 id="s9">9. Project Structure</h2>
+<div class="filetree">
+<span class="dir">pulsar/</span><br>
+&nbsp;&nbsp;<span class="dir">PLSRKit/</span> <span class="desc">&larr; Swift Package (the heart)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">Sources/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">PLSRProtocol/</span> <span class="desc">&larr; encoding, decoding, CRC</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">Interfaces/</span> <span class="desc">&larr; all protocols from &sect;4</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">RGBDifferential/</span> <span class="desc">&larr; first encoding strategy</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">CRC/</span> <span class="desc">&larr; CRC-4 and CRC-8</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">PLSRVision/</span> <span class="desc">&larr; detection, tracking, matching</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">Detectors/</span> <span class="desc">&larr; ThresholdDetector, etc.</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">Matchers/</span> <span class="desc">&larr; SpatialHashMatcher, etc.</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">Tests/</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">TestUtilities/</span> <span class="desc">&larr; FrameSimulator, synthetic data</span><br>
+&nbsp;&nbsp;<span class="dir">PLSRApp/</span> <span class="desc">&larr; iOS app (thin shell)</span><br>
+&nbsp;&nbsp;<span class="dir">PLSRMock/</span> <span class="desc">&larr; macOS mock transmitter</span>
+</div>
+
+<!-- ── 10. TESTING ────────────────────── -->
+<h2 id="s10">10. Testing Strategy</h2>
+
+<h3>10.1 TDD Workflow</h3>
+<ol>
+  <li>Define the interface (protocol)</li>
+  <li>Write tests against the interface</li>
+  <li>Implement to pass the tests</li>
+  <li>Refactor</li>
+</ol>
+
+<h3>10.2 Test Artifacts</h3>
+<p>Any test that processes frame buffers writes visual artifacts to <code>PLSRKit/.build/test-artifacts/</code>:</p>
+<ul>
+  <li><strong>Unit tests:</strong> Input frame + annotated output as PNG</li>
+  <li><strong>Simulation tests:</strong> Annotated MP4 video + first/last frame PNGs</li>
+  <li><strong>Failures:</strong> Frame(s) with expected vs. actual overlay</li>
+</ul>
+
+<h3>10.3 Test Pyramid</h3>
+<p><strong>Unit tests</strong> (fast, <code>swift test</code>): encode/decode round-trips, variable-length addresses, jitter resilience, CRC validation, classification, track state machine.</p>
+<p><strong>Simulation tests</strong> (synthetic frames): full pipeline end-to-end, jitter stress, candidate merge, high candidate count performance, eccentricity filtering, nursery validation.</p>
+<p><strong>Integration tests</strong> (recorded data): Real camera footage replayed through the pipeline. Test corpus built incrementally.</p>
+
+<h3>10.4 FrameSimulator</h3>
+<p>First-class test component modeling a virtual scene with camera, LED strings, and occluders. Projects LED 3D positions through camera, queries encoding strategy for colors, renders synthetic <code>FrameData</code> with configurable noise and jitter.</p>
+
+<!-- ── 11. PHASES ─────────────────────── -->
+<h2 id="s11">11. Implementation Phases</h2>
+
+<h3><span class="phase phase-done">DONE</span> Phase 1: Protocol Foundation</h3>
+<p>Encoding/decoding logic, CRC, variable-length addresses, full test suite.</p>
+
+<h3><span class="phase phase-done">DONE</span> Phase 2: Detection & Tracking</h3>
+<p>ThresholdDetector, SpatialHashMatcher, Track lifecycle, FrameSimulator, simulation tests.</p>
+
+<h3><span class="phase phase-done">DONE</span> Phase 3: Lab Environment</h3>
+<p>macOS mock transmitter, iOS app with camera, debug overlay, decode from mock display.</p>
+
+<h3><span class="phase phase-done">DONE</span> Phase 4: Real Hardware</h3>
+<p>DDP network driver, WLED discovery, white balance calibration, session lifecycle, decode 50+ LEDs from physical hardware.</p>
+
+<h3><span class="phase phase-plan">PLANNED</span> Phase 5: 3D Reconstruction</h3>
+<p>World model, ARKit integration, point cloud visualization, diagnostic patterns, export.</p>
+
+<!-- ── 12. OPEN QUESTIONS ────────────── -->
+<h2 id="s12">12. Open Questions</h2>
+<ol>
+  <li><strong>Optimal symbol rate.</strong> 5&ndash;15 Hz range. Auto-tuned per session via calibration.</li>
+  <li><strong>Calibration preamble value.</strong> Does per-LED calibration meaningfully improve classification?</li>
+  <li><strong>Matcher algorithm.</strong> Greedy vs. spatial hash vs. Hungarian at different densities.</li>
+  <li><strong>Classifier approach.</strong> Max-channel vs. HSV nearest-neighbor vs. adaptive.</li>
+  <li><strong>Idle gap duration.</strong> Does some pause help preamble detection?</li>
+  <li><strong>Lost threshold.</strong> Tune based on real-world occlusion patterns.</li>
+  <li><strong>Minimum candidate size.</strong> Below what area is classification unreliable?</li>
+  <li><strong>Extended color sets.</strong> R+G, R+B, G+B for higher bandwidth?</li>
+  <li><strong>Eccentricity threshold.</strong> Reject vs. downweight?</li>
+  <li><strong>3D reconstruction approach.</strong> Multi-view triangulation strategy.</li>
+</ol>
+
+<!-- ── GLOSSARY ───────────────────────── -->
+<h2 id="glossary">Glossary</h2>
+<dl class="glossary">
+  <dt>Candidate</dt><dd>A bright region detected in a camera frame. An <code>LEDCandidate</code>.</dd>
+  <dt>Track</dt><dd>A persistent entity that follows a single candidate across frames.</dd>
+  <dt>Symbol</dt><dd>The atomic unit of the encoding. Concrete enum shared across strategies.</dd>
+  <dt>Packet</dt><dd>A complete transmission: preamble + header + address + CRC.</dd>
+  <dt>Preamble</dt><dd>Known symbol sequence at the start of a packet for sync/calibration.</dd>
+  <dt>World Model</dt><dd>The collection of decoded LEDs with their 3D positions.</dd>
+  <dt>Strategy</dt><dd>A swappable implementation behind a protocol interface.</dd>
+  <dt>Eccentricity</dt><dd>Shape measure: 0.0 = circle, 1.0 = line. Indicates candidate quality.</dd>
+</dl>
+
+</main>
+</div>
+
+<script>
+// Active TOC link
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const links = document.querySelectorAll('.sidebar nav a');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const link = document.querySelector(`.sidebar nav a[href="#${e.target.id}"]`);
+      if (link) link.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -70% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
