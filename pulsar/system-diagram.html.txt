@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pulsar — Detection & Tracking System</title>
+<style>
+  :root {
+    --bg: #0a0e17;
+    --bg-card: #111827;
+    --bg-card-hover: #1a2332;
+    --border: #1e293b;
+    --border-glow: #334155;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --text-bright: #f8fafc;
+    --accent-blue: #3b82f6;
+    --accent-cyan: #06b6d4;
+    --accent-purple: #8b5cf6;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-red: #ef4444;
+    --accent-pink: #ec4899;
+    --accent-lime: #84cc16;
+    --flow-line: #334155;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
+    overflow-x: hidden;
+  }
+
+  /* ── Header ────────────────────────────── */
+  .header {
+    text-align: center;
+    padding: 48px 24px 24px;
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 10%; right: 10%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+  }
+  .header h1 {
+    font-size: 2.25rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .header p {
+    color: var(--text-dim);
+    font-size: 1rem;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  /* ── Legend ─────────────────────────────── */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 20px 24px;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  /* ── Main Layout ───────────────────────── */
+  .diagram {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  /* ── Section Titles ────────────────────── */
+  .section-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .section-label::before,
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Flow Arrows ───────────────────────── */
+  .flow-arrow {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+    color: var(--flow-line);
+    font-size: 1.2rem;
+    position: relative;
+  }
+  .flow-arrow .label {
+    position: absolute;
+    right: calc(50% - 200px);
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    background: var(--bg);
+    padding: 0 8px;
+    white-space: nowrap;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  .flow-arrow svg {
+    width: 24px;
+    height: 28px;
+  }
+  .flow-arrow svg path {
+    stroke: var(--accent-blue);
+    stroke-width: 2;
+    fill: none;
+    stroke-dasharray: 4 3;
+    animation: flowDown 1s linear infinite;
+  }
+  @keyframes flowDown {
+    to { stroke-dashoffset: -7; }
+  }
+
+  /* ── Cards ─────────────────────────────── */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    transition: all 0.25s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--card-accent, var(--accent-blue));
+    opacity: 0.6;
+    transition: opacity 0.25s;
+  }
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-glow);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .card:hover::before {
+    opacity: 1;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .card-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-bright);
+  }
+  .card-subtitle {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  .card-body {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+  .card-body code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+  }
+
+  /* ── Tag / Pill ────────────────────────── */
+  .tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(255,255,255,0.06);
+    color: var(--text-dim);
+    margin: 2px 2px;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  }
+  .tag.blue   { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+  .tag.cyan   { background: rgba(6,182,212,0.15);  color: var(--accent-cyan); }
+  .tag.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+  .tag.green  { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+  .tag.orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
+  .tag.red    { background: rgba(239,68,68,0.15);  color: var(--accent-red); }
+  .tag.pink   { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+
+  /* ── Pipeline Steps ────────────────────── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: wrap;
+    margin: 8px 0;
+  }
+  .pipeline-step {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.75rem;
+    color: var(--text);
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .pipeline-step:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: var(--accent-cyan);
+    color: var(--text-bright);
+  }
+  .pipeline-chevron {
+    color: var(--flow-line);
+    font-size: 0.8rem;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── Grid Layouts ──────────────────────── */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 900px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── State Machine ─────────────────────── */
+  .state-machine {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 10px 0;
+    flex-wrap: wrap;
+  }
+  .state-node {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    white-space: nowrap;
+  }
+  .state-arrow {
+    padding: 0 6px;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+  }
+  .state-idle       { background: rgba(148,163,184,0.15); color: #94a3b8; }
+  .state-active     { background: rgba(59,130,246,0.2);  color: var(--accent-blue); }
+  .state-receiving  { background: rgba(245,158,11,0.2);  color: var(--accent-orange); }
+  .state-success    { background: rgba(16,185,129,0.2);  color: var(--accent-green); }
+  .state-error      { background: rgba(239,68,68,0.2);   color: var(--accent-red); }
+
+  /* ── Branching arrow ───────────────────── */
+  .branch-container {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+  }
+  .branch-svg { overflow: visible; }
+
+  /* ── Settings Table ────────────────────── */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 16px;
+    font-size: 0.75rem;
+    margin-top: 8px;
+  }
+  .settings-grid .key {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    color: var(--accent-cyan);
+  }
+  .settings-grid .val {
+    text-align: right;
+    color: var(--text-dim);
+  }
+
+  /* ── Animated pulse on hover ───────────── */
+  .pulse-ring {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--card-accent, var(--accent-blue));
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .card:hover .pulse-ring {
+    opacity: 1;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 var(--card-accent, rgba(59,130,246,0.5)); }
+    70%  { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* ── Expandable details ────────────────── */
+  details {
+    margin-top: 8px;
+  }
+  details summary {
+    font-size: 0.72rem;
+    color: var(--accent-blue);
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+  }
+  details summary:hover {
+    color: var(--accent-cyan);
+  }
+  details[open] summary {
+    margin-bottom: 6px;
+  }
+
+  /* ── Footnote ──────────────────────────── */
+  .footer {
+    text-align: center;
+    padding: 32px 24px;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+  }
+  .footer a {
+    color: var(--accent-blue);
+    text-decoration: none;
+  }
+
+  /* ── Tooltip ───────────────────────────── */
+  .tip {
+    position: relative;
+  }
+  .tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: var(--text);
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 10;
+    border: 1px solid var(--border-glow);
+  }
+  .tip:hover::after {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  HEADER                                        -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="header">
+  <h1>Pulsar Detection & Tracking System</h1>
+  <p>Spatial LED mapping via encoded light sequences — from photons to 3D coordinates</p>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-cyan)"></div>Detection</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div>Tracking</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Decoding</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div>Protocol</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-pink)"></div>App / IO</div>
+</div>
+
+<div class="diagram">
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  INPUT                                          -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Input</div>
+
+<div class="card" style="--card-accent: var(--accent-pink);">
+  <div class="pulse-ring"></div>
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink);">&#x1F4F7;</div>
+    <div>
+      <div class="card-title">Camera Capture</div>
+      <div class="card-subtitle">CameraService &rarr; FrameData</div>
+    </div>
+  </div>
+  <div class="card-body">
+    iPhone AVCaptureSession delivers <code>CVPixelBuffer</code> frames with timestamps and optional <code>simd_float4x4</code> ARKit camera transforms. Exposure and white balance are calibrated during a preview phase.
+    <div style="margin-top:8px;">
+      <span class="tag pink">CVPixelBuffer</span>
+      <span class="tag pink">TimeInterval</span>
+      <span class="tag pink">simd_float4x4?</span>
+    </div>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">FrameData { pixelBuffer, timestamp, cameraTransform }</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  DETECTION                                      -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Detection &mdash; PLSRVision / ThresholdDetector</div>
+
+<div class="card" style="--card-accent: var(--accent-cyan);">
+  <div class="pulse-ring"></div>
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan);">&#x1F50D;</div>
+    <div>
+      <div class="card-title">Image Processing Pipeline</div>
+      <div class="card-subtitle">ThresholdDetector.detect(frame:)</div>
+    </div>
+  </div>
+  <div class="card-body">
+    Multi-stage pipeline converts raw pixels into LED candidate blobs. Each stage is togglable via settings.
+    <div class="pipeline">
+      <div class="pipeline-step tip" data-tip="Scale by 0.25x for speed">Downsample</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="max(R, G, B) &rarr; grayscale">Max-Channel</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="3x3 median preserves edges">Median Filter</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="Fixed / Otsu / Adaptive modes">Threshold</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="Erosion &rarr; Dilation removes noise">Morph Open</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="Two-pass union-find with path compression">CCL</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="Eccentricity &lt; 0.85, area 4–10k px">Shape Filter</div>
+      <div class="pipeline-chevron">&rsaquo;</div>
+      <div class="pipeline-step tip" data-tip="Brightness-weighted RGB averaging">Color Sample</div>
+    </div>
+    <details>
+      <summary>Key Settings</summary>
+      <div class="settings-grid">
+        <span class="key">brightnessThreshold</span><span class="val">0.3</span>
+        <span class="key">downsampleFactor</span><span class="val">0.25</span>
+        <span class="key">thresholdMode</span><span class="val">.fixed</span>
+        <span class="key">morphRadius</span><span class="val">2.0</span>
+        <span class="key">maxEccentricity</span><span class="val">0.85</span>
+        <span class="key">minCandidateArea</span><span class="val">4 px</span>
+        <span class="key">maxCandidateArea</span><span class="val">10,000 px</span>
+        <span class="key">medianFilterEnabled</span><span class="val">true</span>
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">[LEDCandidate] { centroid, area, eccentricity, colorSample }</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  TEMPORAL VALIDATION                            -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Temporal Validation</div>
+
+<div class="card" style="--card-accent: var(--accent-purple);">
+  <div class="pulse-ring"></div>
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);">&#x23F3;</div>
+    <div>
+      <div class="card-title">Candidate Nursery</div>
+      <div class="card-subtitle">CandidateNursery.process(candidates:)</div>
+    </div>
+  </div>
+  <div class="card-body">
+    Eliminates transient noise by requiring candidates to persist for <strong>N consecutive frames</strong> before promotion to real tracks.
+    Each incoming candidate is matched to the nearest existing "proto" within <code>matchDistance</code>.
+    <div style="margin-top: 8px;">
+      <span class="tag purple">promotionFrames: 3</span>
+      <span class="tag purple">matchDistance: 30 px</span>
+      <span class="tag purple">lostFrames: 2</span>
+      <span class="tag purple">maxProtos: 30</span>
+    </div>
+    <details>
+      <summary>Promotion Logic</summary>
+      <div class="card-body" style="margin-top:4px;">
+        1. Match each candidate to closest proto &lt; 30 px<br>
+        2. Increment <code>consecutiveFrames</code> on match<br>
+        3. <strong>Promote</strong> when count &ge; 3<br>
+        4. Reset counter if proto lost &amp; reappears<br>
+        5. Evict proto if absent &gt; 2 frames<br>
+        6. Cap total protos at 30 (weakest evicted)
+      </div>
+    </details>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">Promoted [LEDCandidate] (noise-filtered)</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  SPATIAL MATCHING                               -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Spatial Matching</div>
+
+<div class="card" style="--card-accent: var(--accent-purple);">
+  <div class="pulse-ring"></div>
+  <div class="card-header">
+    <div class="card-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);">&#x1F4CD;</div>
+    <div>
+      <div class="card-title">Spatial Hash Matcher</div>
+      <div class="card-subtitle">SpatialHashMatcher.match(candidates:tracks:dt:)</div>
+    </div>
+  </div>
+  <div class="card-body">
+    Correlates promoted candidates with existing tracks using a <strong>spatial hash grid</strong>. Velocity-predicted positions drive <strong>adaptive search radii</strong> — stationary LEDs use a tight 50 px radius; fast camera pans expand up to 200 px.
+    <div class="grid-2" style="margin-top:12px; gap: 10px;">
+      <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+        <div style="font-size:0.72rem; color:var(--accent-cyan); font-weight:600; margin-bottom:4px;">Velocity Prediction</div>
+        <div style="font-size:0.72rem;"><code>predicted = pos + vel &times; &Delta;t</code></div>
+      </div>
+      <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
+        <div style="font-size:0.72rem; color:var(--accent-cyan); font-weight:600; margin-bottom:4px;">Adaptive Radius</div>
+        <div style="font-size:0.72rem;"><code>r = min(200, 50 + speed&times;&Delta;t&times;1.5)</code></div>
+      </div>
+    </div>
+    <details>
+      <summary>Settings</summary>
+      <div class="settings-grid">
+        <span class="key">cellSize</span><span class="val">100 px</span>
+        <span class="key">maxMatchDistance</span><span class="val">50 px</span>
+        <span class="key">velocityMultiplier</span><span class="val">1.5</span>
+        <span class="key">maxSearchRadius</span><span class="val">200 px</span>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- Branch arrow -->
+<div class="branch-container">
+  <svg class="branch-svg" width="600" height="56" viewBox="0 0 600 56">
+    <defs>
+      <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+        <path d="M0,0 L8,3 L0,6" fill="none" stroke="var(--accent-blue)" stroke-width="1.5"/>
+      </marker>
+    </defs>
+    <!-- center trunk -->
+    <line x1="300" y1="0" x2="300" y2="16" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3">
+      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
+    </line>
+    <!-- left branch -->
+    <path d="M300,16 C300,36 100,36 100,52" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
+      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
+    </path>
+    <!-- center branch -->
+    <line x1="300" y1="16" x2="300" y2="52" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
+      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
+    </line>
+    <!-- right branch -->
+    <path d="M300,16 C300,36 500,36 500,52" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
+      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
+    </path>
+    <!-- labels -->
+    <text x="100" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">assignments</text>
+    <text x="300" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">MatchResult</text>
+    <text x="500" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">lostTrackIDs</text>
+  </svg>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  TRACK UPDATE (3-column)                        -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Track Update</div>
+
+<div class="grid-3">
+  <!-- Matched -->
+  <div class="card" style="--card-accent: var(--accent-green);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x2714;</div>
+      <div>
+        <div class="card-title">Matched Tracks</div>
+        <div class="card-subtitle">Update existing</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <strong>Position &amp; Velocity</strong> &mdash; motion estimator (EMA &alpha;=0.4) smooths jitter.<br><br>
+      <strong>Symbol Classification</strong> &mdash; brightness-weighted color &rarr; R/G/B/W symbol via max-channel heuristic.<br><br>
+      <strong>Feed Decoder</strong> &mdash; symbol pushed to per-track <code>SymbolDecoder</code>; state machine advances.
+    </div>
+  </div>
+
+  <!-- New -->
+  <div class="card" style="--card-accent: var(--accent-blue);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);">&#x2795;</div>
+      <div>
+        <div class="card-title">New Tracks</div>
+        <div class="card-subtitle">newCandidates</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Unmatched candidates spawn fresh tracks, each receiving a new <code>SymbolDecoder</code> from the encoding strategy.<br><br>
+      Sorted by quality: <code>confidence &times; (1 &minus; eccentricity)</code><br><br>
+      Capped at <span class="tag blue">maxTracks: 64</span>
+    </div>
+  </div>
+
+  <!-- Lost -->
+  <div class="card" style="--card-accent: var(--accent-red);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(239,68,68,0.15); color:var(--accent-red);">&#x274C;</div>
+      <div>
+        <div class="card-title">Lost Tracks</div>
+        <div class="card-subtitle">Garbage Collection</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Increment <code>framesLost</code> counter for each unmatched track.<br><br>
+      Remove when <code>framesLost &gt; lostThreshold</code>.<br><br>
+      <span class="tag red">lostThreshold: 30 frames</span>
+    </div>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">Per-Track: PixelSample &rarr; classify &rarr; decode</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  PROTOCOL / DECODING                            -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Protocol Layer &mdash; PLSRProtocol / RGB Differential Phase</div>
+
+<div class="grid-2">
+  <!-- Classifier -->
+  <div class="card" style="--card-accent: var(--accent-orange);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F3A8;</div>
+      <div>
+        <div class="card-title">Symbol Classifier</div>
+        <div class="card-subtitle">RGBDiffPhaseClassifier</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Converts <code>PixelSample</code> to a discrete <code>Symbol</code> using max-channel heuristic.
+      <div style="margin-top:8px;">
+        <span class="tag red">Red</span>
+        <span class="tag green">Green</span>
+        <span class="tag blue">Blue</span>
+        <span class="tag">White</span>
+        <span class="tag" style="opacity:0.5;">nil (dim/ambiguous)</span>
+      </div>
+      <details>
+        <summary>Classification Rules</summary>
+        <div class="card-body" style="margin-top:4px;">
+          &bull; <code>max(r,g,b) &lt; darknessThreshold</code> &rarr; nil (too dim)<br>
+          &bull; <code>min/max &gt; whiteTolerance</code> &rarr; White<br>
+          &bull; Dominant channel wins (with epsilon guard)
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Decoder -->
+  <div class="card" style="--card-accent: var(--accent-green);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x1F513;</div>
+      <div>
+        <div class="card-title">Symbol Decoder</div>
+        <div class="card-subtitle">RGBDiffPhaseDecoder</div>
+      </div>
+    </div>
+    <div class="card-body">
+      State machine decodes symbol stream into LED address. Consecutive duplicate symbols are deduplicated (hold detection).
+      <div class="state-machine">
+        <div class="state-node state-idle">idle</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-active">calibrating</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-active">synced</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-receiving">receiving(n)</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-success">decoded(id)</div>
+      </div>
+      <div style="margin-top:4px; margin-left: 200px;">
+        <span class="state-arrow" style="padding:0;">&searr;</span>
+        <span class="state-node state-error">failed(err)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Packet Structure -->
+<div style="margin-top: 16px;">
+  <div class="card" style="--card-accent: var(--accent-orange);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F4E6;</div>
+      <div>
+        <div class="card-title">Packet Structure</div>
+        <div class="card-subtitle">Variable-length address encoding</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div style="display:flex; gap:0; margin:8px 0; flex-wrap:wrap;">
+        <div style="background:rgba(148,163,184,0.15); padding:8px 14px; border-radius:8px 0 0 8px; border:1px solid var(--border); font-size:0.75rem; text-align:center;">
+          <div style="color:var(--text-bright); font-weight:600;">Preamble</div>
+          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">W R G B W</div>
+          <div style="color:var(--text-dim); font-size:0.6rem;">5 symbols</div>
+        </div>
+        <div style="background:rgba(139,92,246,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
+          <div style="color:var(--accent-purple); font-weight:600;">Sync</div>
+          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">W</div>
+          <div style="color:var(--text-dim); font-size:0.6rem;">1 symbol</div>
+        </div>
+        <div style="background:rgba(59,130,246,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
+          <div style="color:var(--accent-blue); font-weight:600;">Header</div>
+          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">nibble count</div>
+          <div style="color:var(--text-dim); font-size:0.6rem;">4 bits</div>
+        </div>
+        <div style="background:rgba(6,182,212,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center; flex: 1; min-width:100px;">
+          <div style="color:var(--accent-cyan); font-weight:600;">Address</div>
+          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">LED ID bits</div>
+          <div style="color:var(--text-dim); font-size:0.6rem;">4&ndash;12 bits (variable)</div>
+        </div>
+        <div style="background:rgba(16,185,129,0.1); padding:8px 14px; border-radius:0 8px 8px 0; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
+          <div style="color:var(--accent-green); font-weight:600;">CRC</div>
+          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">CRC-4 or CRC-8</div>
+          <div style="color:var(--text-dim); font-size:0.6rem;">4&ndash;8 bits</div>
+        </div>
+      </div>
+      <div style="font-size:0.72rem; margin-top:4px; color:var(--text-dim);">
+        <strong>Bit encoding:</strong> data is in color <em>transitions</em>, not absolute colors. Clockwise RGB rotation = 1, counter-clockwise = 0.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">decoded LED ID &rarr; Track.decodedID</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  OUTPUT / ORCHESTRATION                        -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Orchestration &amp; Output</div>
+
+<div class="grid-2">
+  <!-- TrackManager -->
+  <div class="card" style="--card-accent: var(--accent-blue);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);">&#x1F3AF;</div>
+      <div>
+        <div class="card-title">TrackManager</div>
+        <div class="card-subtitle">TrackManager.processFrame(frameData:)</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Central orchestrator that wires together all pipeline stages per frame:
+      <div style="margin-top:8px; font-family:'SF Mono','Fira Code',monospace; font-size:0.7rem; line-height:2; color:var(--text-dim);">
+        <span class="tag cyan">1</span> detect &rarr;
+        <span class="tag purple">2</span> nursery &rarr;
+        <span class="tag purple">3</span> match &rarr;
+        <span class="tag green">4</span> update &rarr;
+        <span class="tag blue">5</span> create &rarr;
+        <span class="tag red">6</span> gc
+      </div>
+      <details>
+        <summary>Settings</summary>
+        <div class="settings-grid">
+          <span class="key">maxTracks</span><span class="val">64</span>
+          <span class="key">lostThreshold</span><span class="val">30 frames</span>
+          <span class="key">nurseryPromotionFrames</span><span class="val">3</span>
+          <span class="key">nurseryMatchDistance</span><span class="val">30 px</span>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- Track -->
+  <div class="card" style="--card-accent: var(--accent-green);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x1F4CC;</div>
+      <div>
+        <div class="card-title">Track</div>
+        <div class="card-subtitle">@Observable class &mdash; per-LED entity</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Persistent entity representing a single LED being tracked. Holds all per-LED state and drives SwiftUI reactivity.
+      <div style="margin-top:8px;">
+        <span class="tag cyan">position</span>
+        <span class="tag cyan">velocity</span>
+        <span class="tag orange">symbolBuffer</span>
+        <span class="tag green">decoder</span>
+        <span class="tag purple">state</span>
+        <span class="tag">stateHistory</span>
+        <span class="tag red">framesLost</span>
+      </div>
+      <div class="state-machine" style="margin-top: 8px;">
+        <div class="state-node state-active">preambleSearch</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-receiving">receiving(n)</div>
+        <div class="state-arrow">&rarr;</div>
+        <div class="state-node state-success">decoded(id)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="flow-arrow">
+  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
+  <div class="label">[TrackSnapshot] &rarr; @MainActor for UI</div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  APP INTEGRATION                                -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">App Layer &mdash; PLSRApp</div>
+
+<div class="grid-4">
+  <div class="card" style="--card-accent: var(--accent-pink);">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F4F1;</div>
+      <div><div class="card-title" style="font-size:0.82rem;">Camera Preview</div></div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">Live feed with debug overlay showing candidates, tracks, and decoded IDs.</div>
+  </div>
+  <div class="card" style="--card-accent: var(--accent-pink);">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F527;</div>
+      <div><div class="card-title" style="font-size:0.82rem;">Debug Settings</div></div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">Live sliders for all detector, matcher, and encoder parameters.</div>
+  </div>
+  <div class="card" style="--card-accent: var(--accent-pink);">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F4E1;</div>
+      <div><div class="card-title" style="font-size:0.82rem;">DDP Network</div></div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">UDP commands to WLED controllers. mDNS device discovery.</div>
+  </div>
+  <div class="card" style="--card-accent: var(--accent-pink);">
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F39B;</div>
+      <div><div class="card-title" style="font-size:0.82rem;">Session Control</div></div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">Preview &rarr; calibration &rarr; scanning lifecycle management.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  TRANSMITTER SIDE                               -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Transmitter (LED Controller / Mock)</div>
+
+<div class="grid-2">
+  <div class="card" style="--card-accent: var(--accent-orange);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F4A1;</div>
+      <div>
+        <div class="card-title">WLED Controller</div>
+        <div class="card-subtitle">DDP over UDP</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Physical LED hardware running WLED firmware. Receives DDP packets containing encoded RGB sequences that flash each LED with its unique address pattern.
+    </div>
+  </div>
+
+  <div class="card" style="--card-accent: var(--accent-orange);">
+    <div class="pulse-ring"></div>
+    <div class="card-header">
+      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F5A5;</div>
+      <div>
+        <div class="card-title">PLSRMock</div>
+        <div class="card-subtitle">macOS screen transmitter</div>
+      </div>
+    </div>
+    <div class="card-body">
+      Renders flashing LED dots on screen for testing without hardware. Includes <code>DistractionEngine</code> for timing jitter and <code>GlowConfig</code> for realistic LED profiles.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ -->
+<!--  ARCHITECTURE NOTES                             -->
+<!-- ════════════════════════════════════════════════ -->
+<div class="section-label">Key Design Principles</div>
+
+<div class="grid-3">
+  <div class="card" style="--card-accent: var(--accent-lime);">
+    <div class="card-header">
+      <div class="card-title" style="font-size:0.82rem;">Pluggable Strategies</div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">
+      <code>EncodingStrategy</code> protocol abstracts encoding, classification, and decoding. New schemes can be swapped in without touching vision code.
+    </div>
+  </div>
+  <div class="card" style="--card-accent: var(--accent-lime);">
+    <div class="card-header">
+      <div class="card-title" style="font-size:0.82rem;">Transition-Based Data</div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">
+      Bit values are encoded in color <em>transitions</em> (CW/CCW RGB rotation), not absolute colors. Robust to frame rate variation and exposure drift.
+    </div>
+  </div>
+  <div class="card" style="--card-accent: var(--accent-lime);">
+    <div class="card-header">
+      <div class="card-title" style="font-size:0.82rem;">Testable Without Hardware</div>
+    </div>
+    <div class="card-body" style="font-size:0.72rem;">
+      <code>PLSRKit</code> runs with <code>swift test</code>&thinsp;&mdash;&thinsp;no Xcode or device needed. <code>FrameSimulator</code> generates synthetic video with known LED positions.
+    </div>
+  </div>
+</div>
+
+</div><!-- .diagram -->
+
+<div class="footer">
+  Pulsar System Diagram &mdash; auto-generated from codebase analysis
+</div>
+
+</body>
+</html>
