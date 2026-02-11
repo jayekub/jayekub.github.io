@@ -3,999 +3,1310 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pulsar — Detection & Tracking System</title>
+<title>Pulsar — Architecture Diagram</title>
 <style>
   :root {
     --bg: #0a0e17;
+    --bg-layer: #0f1623;
     --bg-card: #111827;
-    --bg-card-hover: #1a2332;
+    --bg-expanded: #0d1220;
     --border: #1e293b;
     --border-glow: #334155;
     --text: #e2e8f0;
     --text-dim: #94a3b8;
     --text-bright: #f8fafc;
-    --accent-blue: #3b82f6;
-    --accent-cyan: #06b6d4;
-    --accent-purple: #8b5cf6;
-    --accent-green: #10b981;
-    --accent-orange: #f59e0b;
-    --accent-red: #ef4444;
-    --accent-pink: #ec4899;
-    --accent-lime: #84cc16;
-    --flow-line: #334155;
+    --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    --cyan: #06b6d4;
+    --blue: #3b82f6;
+    --purple: #8b5cf6;
+    --green: #10b981;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --pink: #ec4899;
+    --yellow: #eab308;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: var(--sans);
     line-height: 1.5;
-    overflow-x: hidden;
+    min-height: 100vh;
   }
 
-  /* ── Header ────────────────────────────── */
+  /* ── Header ──────────────────────────── */
   .header {
     text-align: center;
-    padding: 48px 24px 24px;
-    position: relative;
-  }
-  .header::after {
-    content: '';
-    position: absolute;
-    bottom: 0; left: 10%; right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
+    padding: 28px 24px 16px;
   }
   .header h1 {
-    font-size: 2.25rem;
+    font-size: 1.4rem;
     font-weight: 700;
     letter-spacing: -0.03em;
-    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue), var(--accent-purple));
+    background: linear-gradient(135deg, var(--cyan), var(--blue), var(--purple));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
   }
   .header p {
     color: var(--text-dim);
-    font-size: 1rem;
-    max-width: 600px;
-    margin: 0 auto;
+    font-size: 0.78rem;
+    margin-top: 4px;
   }
 
-  /* ── Legend ─────────────────────────────── */
-  .legend {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    padding: 20px 24px;
-    flex-wrap: wrap;
+  /* ── Diagram container ───────────────── */
+  .diagram {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
   }
-  .legend-item {
+
+  /* ── Flow connector ──────────────────── */
+  .flow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    position: relative;
+  }
+  .flow-line {
+    width: 2px;
+    height: 100%;
+    background: var(--border-glow);
+    position: relative;
+  }
+  .flow-line::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: -3px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid var(--border-glow);
+  }
+  .flow-label {
+    position: absolute;
+    left: calc(50% + 16px);
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    white-space: nowrap;
+    opacity: 0.7;
+  }
+
+  /* ── Layer (collapsed row) ───────────── */
+  .layer {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg-layer);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .layer::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: var(--layer-color, var(--blue));
+    border-radius: 10px 0 0 10px;
+    opacity: 0.5;
+    transition: opacity 0.25s;
+  }
+  .layer:hover { border-color: var(--border-glow); }
+  .layer:hover::before { opacity: 1; }
+  .layer.expanded {
+    border-color: var(--border-glow);
+    background: var(--bg-expanded);
+    cursor: default;
+  }
+  .layer.expanded::before { opacity: 1; }
+  .layer.planned {
+    border-style: dashed;
+    opacity: 0.65;
+  }
+  .layer.planned:hover { opacity: 0.85; }
+  .layer.planned.expanded { opacity: 1; }
+
+  /* ── Layer header (always visible) ───── */
+  .layer-bar {
+    display: grid;
+    grid-template-columns: 24px 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    min-height: 44px;
+  }
+  .layer-num {
+    font-size: 0.6rem;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: var(--layer-color, var(--blue));
+    text-align: center;
+    opacity: 0.7;
+  }
+  .layer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+  .layer-title {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-bright);
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.8rem;
-    color: var(--text-dim);
   }
-  .legend-dot {
-    width: 10px; height: 10px;
-    border-radius: 50%;
-  }
-
-  /* ── Main Layout ───────────────────────── */
-  .diagram {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  /* ── Section Titles ────────────────────── */
-  .section-label {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 16px 0 8px;
-    font-size: 0.7rem;
+  .layer-title .planned-badge {
+    font-size: 0.55rem;
     font-weight: 600;
-    letter-spacing: 0.15em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(234,179,8,0.15);
+    color: var(--yellow);
+    letter-spacing: 0.05em;
     text-transform: uppercase;
+  }
+  .layer-subtitle {
+    font-size: 0.68rem;
+    font-family: var(--mono);
     color: var(--text-dim);
-  }
-  .section-label::before,
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  /* ── Flow Arrows ───────────────────────── */
-  .flow-arrow {
-    display: flex;
-    justify-content: center;
-    padding: 4px 0;
-    color: var(--flow-line);
-    font-size: 1.2rem;
-    position: relative;
-  }
-  .flow-arrow .label {
-    position: absolute;
-    right: calc(50% - 200px);
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    background: var(--bg);
-    padding: 0 8px;
-    white-space: nowrap;
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-  }
-  .flow-arrow svg {
-    width: 24px;
-    height: 28px;
-  }
-  .flow-arrow svg path {
-    stroke: var(--accent-blue);
-    stroke-width: 2;
-    fill: none;
-    stroke-dasharray: 4 3;
-    animation: flowDown 1s linear infinite;
-  }
-  @keyframes flowDown {
-    to { stroke-dashoffset: -7; }
-  }
-
-  /* ── Cards ─────────────────────────────── */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-    transition: all 0.25s ease;
-    cursor: default;
-    position: relative;
     overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: var(--card-accent, var(--accent-blue));
-    opacity: 0.6;
-    transition: opacity 0.25s;
-  }
-  .card:hover {
-    background: var(--bg-card-hover);
-    border-color: var(--border-glow);
-    transform: translateY(-1px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-  }
-  .card:hover::before {
-    opacity: 1;
-  }
-  .card-header {
+  .layer-type-flow {
+    font-size: 0.62rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 4px;
+  }
+  .layer-type-flow .t {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+  }
+  .layer-type-flow .arrow { color: var(--border-glow); }
+  .layer-chevron {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+    width: 20px;
+    text-align: center;
+  }
+  .layer.expanded .layer-chevron { transform: rotate(90deg); }
+
+  /* ── Layer detail (expanded) ─────────── */
+  .layer-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+  }
+  .layer.expanded .layer-detail {
+    max-height: 2000px;
+  }
+  .layer-content {
+    padding: 0 14px 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+    padding-top: 14px;
+  }
+
+  /* ── Strategy switcher ─────────────── */
+  .strategies {
+    display: flex;
+    gap: 6px;
     margin-bottom: 12px;
   }
-  .card-icon {
-    width: 32px; height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    flex-shrink: 0;
+  .strat-tab {
+    font-size: 0.68rem;
+    font-family: var(--mono);
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  .card-title {
-    font-size: 0.95rem;
-    font-weight: 600;
+  .strat-tab:hover {
+    border-color: var(--border-glow);
+    color: var(--text);
+  }
+  .strat-tab.active {
+    background: rgba(255,255,255,0.06);
+    border-color: var(--layer-color, var(--blue));
     color: var(--text-bright);
   }
-  .card-subtitle {
+  .strat-panel { display: none; }
+  .strat-panel.active { display: block; }
+
+  /* ── Code blocks ─────────────────────── */
+  .proto-block {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-family: var(--mono);
     font-size: 0.7rem;
-    color: var(--text-dim);
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    line-height: 1.7;
+    overflow-x: auto;
   }
-  .card-body {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    line-height: 1.6;
-  }
-  .card-body code {
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    background: rgba(255,255,255,0.06);
-    padding: 1px 5px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    color: var(--accent-cyan);
-  }
+  .proto-block .kw { color: var(--pink); }
+  .proto-block .ty { color: var(--cyan); }
+  .proto-block .pr { color: var(--text); }
+  .proto-block .fn { color: var(--green); }
+  .proto-block .cm { color: #4a5568; font-style: italic; }
+  .proto-block .st { color: var(--orange); }
+  .proto-block .op { color: var(--text-dim); }
 
-  /* ── Tag / Pill ────────────────────────── */
-  .tag {
-    display: inline-block;
-    font-size: 0.65rem;
+  /* ── Struct/data grid ──────────────── */
+  .type-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 10px;
+    margin: 10px 0;
+  }
+  .type-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .type-card-title {
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: var(--mono);
+    color: var(--text-bright);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .type-card-title .kind {
+    font-size: 0.55rem;
     font-weight: 500;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    background: rgba(255,255,255,0.06);
-    color: var(--text-dim);
-    margin: 2px 2px;
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-  .tag.blue   { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
-  .tag.cyan   { background: rgba(6,182,212,0.15);  color: var(--accent-cyan); }
-  .tag.purple { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
-  .tag.green  { background: rgba(16,185,129,0.15); color: var(--accent-green); }
-  .tag.orange { background: rgba(245,158,11,0.15); color: var(--accent-orange); }
-  .tag.red    { background: rgba(239,68,68,0.15);  color: var(--accent-red); }
-  .tag.pink   { background: rgba(236,72,153,0.15); color: var(--accent-pink); }
+  .kind-struct   { background: rgba(6,182,212,0.15); color: var(--cyan); }
+  .kind-protocol { background: rgba(139,92,246,0.15); color: var(--purple); }
+  .kind-class    { background: rgba(59,130,246,0.15); color: var(--blue); }
+  .kind-enum     { background: rgba(245,158,11,0.15); color: var(--orange); }
+  .type-card .field {
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    padding: 1px 0;
+    display: flex;
+    gap: 4px;
+  }
+  .type-card .field .name { color: var(--text); }
+  .type-card .field .sep  { color: var(--text-dim); }
+  .type-card .field .type { color: var(--cyan); }
 
-  /* ── Pipeline Steps ────────────────────── */
-  .pipeline {
+  /* ── Pipeline steps ──────────────────── */
+  .pipe {
     display: flex;
     align-items: center;
     gap: 0;
     flex-wrap: wrap;
     margin: 8px 0;
   }
-  .pipeline-step {
+  .pipe-step {
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 0.75rem;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 0.68rem;
     color: var(--text);
     white-space: nowrap;
-    transition: all 0.2s;
   }
-  .pipeline-step:hover {
-    background: rgba(255,255,255,0.08);
-    border-color: var(--accent-cyan);
-    color: var(--text-bright);
-  }
-  .pipeline-chevron {
-    color: var(--flow-line);
-    font-size: 0.8rem;
-    padding: 0 4px;
+  .pipe-chev {
+    color: var(--border-glow);
+    font-size: 0.75rem;
+    padding: 0 3px;
     flex-shrink: 0;
   }
 
-  /* ── Grid Layouts ──────────────────────── */
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-  }
-  .grid-4 {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-  }
-  @media (max-width: 900px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    .grid-4 { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* ── State Machine ─────────────────────── */
-  .state-machine {
+  /* ── State machine ───────────────────── */
+  .states {
     display: flex;
     align-items: center;
     gap: 0;
-    margin: 10px 0;
     flex-wrap: wrap;
+    margin: 6px 0;
   }
-  .state-node {
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.72rem;
+  .state {
+    padding: 4px 10px;
+    border-radius: 14px;
+    font-size: 0.65rem;
     font-weight: 500;
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-family: var(--mono);
     white-space: nowrap;
   }
-  .state-arrow {
-    padding: 0 6px;
-    color: var(--text-dim);
-    font-size: 0.8rem;
-  }
-  .state-idle       { background: rgba(148,163,184,0.15); color: #94a3b8; }
-  .state-active     { background: rgba(59,130,246,0.2);  color: var(--accent-blue); }
-  .state-receiving  { background: rgba(245,158,11,0.2);  color: var(--accent-orange); }
-  .state-success    { background: rgba(16,185,129,0.2);  color: var(--accent-green); }
-  .state-error      { background: rgba(239,68,68,0.2);   color: var(--accent-red); }
+  .state-arr { padding: 0 5px; color: var(--text-dim); font-size: 0.75rem; }
+  .s-idle   { background: rgba(148,163,184,0.12); color: #94a3b8; }
+  .s-work   { background: rgba(59,130,246,0.15);  color: var(--blue); }
+  .s-recv   { background: rgba(245,158,11,0.15);  color: var(--orange); }
+  .s-ok     { background: rgba(16,185,129,0.15);  color: var(--green); }
+  .s-err    { background: rgba(239,68,68,0.15);   color: var(--red); }
 
-  /* ── Branching arrow ───────────────────── */
-  .branch-container {
+  /* ── Packet viz ──────────────────────── */
+  .packet {
     display: flex;
-    justify-content: center;
-    padding: 4px 0;
+    gap: 0;
+    margin: 8px 0;
+    font-size: 0.68rem;
   }
-  .branch-svg { overflow: visible; }
+  .pkt-seg {
+    padding: 6px 12px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .pkt-seg:first-child { border-radius: 6px 0 0 6px; }
+  .pkt-seg:last-child  { border-radius: 0 6px 6px 0; }
+  .pkt-seg:not(:first-child) { border-left: none; }
+  .pkt-seg .pkt-name { font-weight: 600; font-size: 0.68rem; }
+  .pkt-seg .pkt-desc { font-size: 0.58rem; color: var(--text-dim); margin-top: 1px; }
 
-  /* ── Settings Table ────────────────────── */
-  .settings-grid {
+  /* ── Misc ────────────────────────────── */
+  .desc {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .desc code {
+    font-family: var(--mono);
+    background: rgba(255,255,255,0.06);
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.68rem;
+    color: var(--cyan);
+  }
+  .tag {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 500;
+    padding: 1px 7px;
+    border-radius: 9999px;
+    font-family: var(--mono);
+    margin: 1px 1px;
+  }
+  .tag-cyan   { background: rgba(6,182,212,0.12); color: var(--cyan); }
+  .tag-purple { background: rgba(139,92,246,0.12); color: var(--purple); }
+  .tag-green  { background: rgba(16,185,129,0.12); color: var(--green); }
+  .tag-orange { background: rgba(245,158,11,0.12); color: var(--orange); }
+  .tag-blue   { background: rgba(59,130,246,0.12); color: var(--blue); }
+  .tag-red    { background: rgba(239,68,68,0.12); color: var(--red); }
+  .tag-dim    { background: rgba(255,255,255,0.04); color: var(--text-dim); }
+  .sub-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-dim);
+    margin: 12px 0 6px;
+  }
+  .settings-tbl {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: 4px 16px;
-    font-size: 0.75rem;
-    margin-top: 8px;
+    gap: 2px 14px;
+    font-size: 0.65rem;
+    font-family: var(--mono);
+    margin: 6px 0;
   }
-  .settings-grid .key {
-    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-    color: var(--accent-cyan);
+  .settings-tbl .k { color: var(--cyan); }
+  .settings-tbl .v { color: var(--text-dim); text-align: right; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  @media (max-width: 700px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .layer-type-flow { display: none; }
   }
-  .settings-grid .val {
-    text-align: right;
+  .branch-label {
+    font-size: 0.6rem;
+    font-family: var(--mono);
     color: var(--text-dim);
+    opacity: 0.6;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
   }
-
-  /* ── Animated pulse on hover ───────────── */
-  .pulse-ring {
-    position: absolute;
-    top: 12px; right: 12px;
-    width: 8px; height: 8px;
+  .branch-label .dot {
+    width: 6px; height: 6px;
     border-radius: 50%;
-    background: var(--card-accent, var(--accent-blue));
-    opacity: 0;
-    transition: opacity 0.3s;
+    background: var(--green);
   }
-  .card:hover .pulse-ring {
-    opacity: 1;
-    animation: pulse 1.5s ease-in-out infinite;
+  .branch-label .dot.wip {
+    background: var(--orange);
   }
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 0 0 var(--card-accent, rgba(59,130,246,0.5)); }
-    70%  { box-shadow: 0 0 0 8px transparent; }
-    100% { box-shadow: 0 0 0 0 transparent; }
-  }
-
-  /* ── Expandable details ────────────────── */
-  details {
-    margin-top: 8px;
-  }
-  details summary {
-    font-size: 0.72rem;
-    color: var(--accent-blue);
-    cursor: pointer;
-    user-select: none;
-    font-weight: 500;
-  }
-  details summary:hover {
-    color: var(--accent-cyan);
-  }
-  details[open] summary {
-    margin-bottom: 6px;
-  }
-
-  /* ── Footnote ──────────────────────────── */
-  .footer {
-    text-align: center;
-    padding: 32px 24px;
+  .impl-note {
+    font-size: 0.62rem;
     color: var(--text-dim);
-    font-size: 0.72rem;
-  }
-  .footer a {
-    color: var(--accent-blue);
-    text-decoration: none;
-  }
-
-  /* ── Tooltip ───────────────────────────── */
-  .tip {
-    position: relative;
-  }
-  .tip::after {
-    content: attr(data-tip);
-    position: absolute;
-    bottom: calc(100% + 6px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: #1e293b;
-    color: var(--text);
-    font-size: 0.7rem;
-    padding: 4px 10px;
-    border-radius: 6px;
-    white-space: nowrap;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.2s;
-    z-index: 10;
-    border: 1px solid var(--border-glow);
-  }
-  .tip:hover::after {
-    opacity: 1;
+    font-style: italic;
+    margin-top: 6px;
   }
 </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════════════ -->
-<!--  HEADER                                        -->
-<!-- ════════════════════════════════════════════════ -->
 <div class="header">
-  <h1>Pulsar Detection & Tracking System</h1>
-  <p>Spatial LED mapping via encoded light sequences — from photons to 3D coordinates</p>
-</div>
-
-<div class="legend">
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-cyan)"></div>Detection</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-purple)"></div>Tracking</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-green)"></div>Decoding</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-orange)"></div>Protocol</div>
-  <div class="legend-item"><div class="legend-dot" style="background:var(--accent-pink)"></div>App / IO</div>
+  <h1>Pulsar Detection & Tracking Architecture</h1>
+  <p>Code architecture & data flow &mdash; click any layer to expand</p>
 </div>
 
 <div class="diagram">
 
-<!-- ════════════════════════════════════════════════ -->
-<!--  INPUT                                          -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Input</div>
-
-<div class="card" style="--card-accent: var(--accent-pink);">
-  <div class="pulse-ring"></div>
-  <div class="card-header">
-    <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink);">&#x1F4F7;</div>
-    <div>
-      <div class="card-title">Camera Capture</div>
-      <div class="card-subtitle">CameraService &rarr; FrameData</div>
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L0: INPUT                                                 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--pink);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">IN</div>
+    <div class="layer-info">
+      <div class="layer-title">Camera Capture</div>
+      <div class="layer-subtitle">CameraService &rarr; PipelineProcessor &rarr; TrackManager</div>
     </div>
-  </div>
-  <div class="card-body">
-    iPhone AVCaptureSession delivers <code>CVPixelBuffer</code> frames with timestamps and optional <code>simd_float4x4</code> ARKit camera transforms. Exposure and white balance are calibrated during a preview phase.
-    <div style="margin-top:8px;">
-      <span class="tag pink">CVPixelBuffer</span>
-      <span class="tag pink">TimeInterval</span>
-      <span class="tag pink">simd_float4x4?</span>
+    <div class="layer-type-flow">
+      <span class="t">CVPixelBuffer</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--cyan);">FrameData</span>
     </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
+  <div class="layer-detail"><div class="layer-content">
+    <div class="desc">
+      <code>CameraService</code> manages <code>AVCaptureSession</code> with manual exposure/ISO control. Frames bridge to <code>PipelineProcessor</code> (background actor) which calls <code>TrackManager.processFrame()</code>.
+      In Phase 5, <code>ARSession</code> will replace AVCapture to provide <code>cameraTransform</code>.
+    </div>
+    <div class="type-cards">
+      <div class="type-card">
+        <div class="type-card-title">FrameData <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">pixelBuffer</span><span class="sep">:</span><span class="type">CVPixelBuffer</span></div>
+        <div class="field"><span class="name">timestamp</span><span class="sep">:</span><span class="type">TimeInterval</span></div>
+        <div class="field"><span class="name">cameraTransform</span><span class="sep">:</span><span class="type">simd_float4x4?</span></div>
+        <div class="impl-note">@unchecked Sendable &mdash; cameraTransform is nil until ARKit Phase 5</div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">PixelSample <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">channels</span><span class="sep">:</span><span class="type">[Float]</span></div>
+        <div class="field"><span class="name">timestamp</span><span class="sep">:</span><span class="type">TimeInterval</span></div>
+        <div class="impl-note">Sendable &mdash; RGB float values (0&ndash;1), used downstream by classifier</div>
+      </div>
+    </div>
+  </div></div>
 </div>
 
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">FrameData { pixelBuffer, timestamp, cameraTransform }</div>
-</div>
+<div class="flow"><div class="flow-line"></div><span class="flow-label">FrameData</span></div>
 
-<!-- ════════════════════════════════════════════════ -->
-<!--  DETECTION                                      -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Detection &mdash; PLSRVision / ThresholdDetector</div>
-
-<div class="card" style="--card-accent: var(--accent-cyan);">
-  <div class="pulse-ring"></div>
-  <div class="card-header">
-    <div class="card-icon" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan);">&#x1F50D;</div>
-    <div>
-      <div class="card-title">Image Processing Pipeline</div>
-      <div class="card-subtitle">ThresholdDetector.detect(frame:)</div>
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L1: DETECTION                                             -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--cyan);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">1</div>
+    <div class="layer-info">
+      <div class="layer-title">Detection</div>
+      <div class="layer-subtitle">protocol LEDDetector &rarr; ThresholdDetector</div>
     </div>
+    <div class="layer-type-flow">
+      <span class="t">FrameData</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--cyan);">[LEDCandidate]</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
-  <div class="card-body">
-    Multi-stage pipeline converts raw pixels into LED candidate blobs. Each stage is togglable via settings.
-    <div class="pipeline">
-      <div class="pipeline-step tip" data-tip="Scale by 0.25x for speed">Downsample</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="max(R, G, B) &rarr; grayscale">Max-Channel</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="3x3 median preserves edges">Median Filter</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="Fixed / Otsu / Adaptive modes">Threshold</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="Erosion &rarr; Dilation removes noise">Morph Open</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="Two-pass union-find with path compression">CCL</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="Eccentricity &lt; 0.85, area 4–10k px">Shape Filter</div>
-      <div class="pipeline-chevron">&rsaquo;</div>
-      <div class="pipeline-step tip" data-tip="Brightness-weighted RGB averaging">Color Sample</div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="proto-block">
+      <span class="kw">protocol</span> <span class="ty">LEDDetector</span> {<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">detect</span>(<span class="pr">in</span> frame: <span class="ty">FrameData</span>) -> [<span class="ty">LEDCandidate</span>]<br>
+      }
     </div>
-    <details>
-      <summary>Key Settings</summary>
-      <div class="settings-grid">
-        <span class="key">brightnessThreshold</span><span class="val">0.3</span>
-        <span class="key">downsampleFactor</span><span class="val">0.25</span>
-        <span class="key">thresholdMode</span><span class="val">.fixed</span>
-        <span class="key">morphRadius</span><span class="val">2.0</span>
-        <span class="key">maxEccentricity</span><span class="val">0.85</span>
-        <span class="key">minCandidateArea</span><span class="val">4 px</span>
-        <span class="key">maxCandidateArea</span><span class="val">10,000 px</span>
-        <span class="key">medianFilterEnabled</span><span class="val">true</span>
+
+    <div class="sub-label">Strategy: ThresholdDetector</div>
+    <div class="desc">
+      GPU-accelerated CIFilter pipeline with CPU-side connected component labeling (union-find).
+      VNDetectContoursRequest was <a href="#" style="color:var(--orange);text-decoration:none;cursor:default;">evaluated and rejected</a> &mdash; same thresholded input, higher latency.
+    </div>
+
+    <div class="pipe">
+      <div class="pipe-step">Downsample 0.25x</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">max(R,G,B)</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">Median 3x3</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">Threshold</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">Morph Open</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">CCL</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">Shape Filter</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step">Color Sample</div>
+    </div>
+
+    <div class="type-cards">
+      <div class="type-card">
+        <div class="type-card-title">LEDCandidate <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">id</span><span class="sep">:</span><span class="type">UUID</span></div>
+        <div class="field"><span class="name">centroid</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">boundingBox</span><span class="sep">:</span><span class="type">CGRect</span></div>
+        <div class="field"><span class="name">colorSample</span><span class="sep">:</span><span class="type">PixelSample</span></div>
+        <div class="field"><span class="name">area</span><span class="sep">:</span><span class="type">Float</span></div>
+        <div class="field"><span class="name">eccentricity</span><span class="sep">:</span><span class="type">Float</span></div>
+        <div class="field"><span class="name">confidence</span><span class="sep">:</span><span class="type">Float</span></div>
+        <div class="impl-note">Identifiable, Hashable, Sendable</div>
       </div>
-    </details>
-  </div>
-</div>
-
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">[LEDCandidate] { centroid, area, eccentricity, colorSample }</div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  TEMPORAL VALIDATION                            -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Temporal Validation</div>
-
-<div class="card" style="--card-accent: var(--accent-purple);">
-  <div class="pulse-ring"></div>
-  <div class="card-header">
-    <div class="card-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);">&#x23F3;</div>
-    <div>
-      <div class="card-title">Candidate Nursery</div>
-      <div class="card-subtitle">CandidateNursery.process(candidates:)</div>
-    </div>
-  </div>
-  <div class="card-body">
-    Eliminates transient noise by requiring candidates to persist for <strong>N consecutive frames</strong> before promotion to real tracks.
-    Each incoming candidate is matched to the nearest existing "proto" within <code>matchDistance</code>.
-    <div style="margin-top: 8px;">
-      <span class="tag purple">promotionFrames: 3</span>
-      <span class="tag purple">matchDistance: 30 px</span>
-      <span class="tag purple">lostFrames: 2</span>
-      <span class="tag purple">maxProtos: 30</span>
-    </div>
-    <details>
-      <summary>Promotion Logic</summary>
-      <div class="card-body" style="margin-top:4px;">
-        1. Match each candidate to closest proto &lt; 30 px<br>
-        2. Increment <code>consecutiveFrames</code> on match<br>
-        3. <strong>Promote</strong> when count &ge; 3<br>
-        4. Reset counter if proto lost &amp; reappears<br>
-        5. Evict proto if absent &gt; 2 frames<br>
-        6. Cap total protos at 30 (weakest evicted)
-      </div>
-    </details>
-  </div>
-</div>
-
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">Promoted [LEDCandidate] (noise-filtered)</div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  SPATIAL MATCHING                               -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Spatial Matching</div>
-
-<div class="card" style="--card-accent: var(--accent-purple);">
-  <div class="pulse-ring"></div>
-  <div class="card-header">
-    <div class="card-icon" style="background:rgba(139,92,246,0.15); color:var(--accent-purple);">&#x1F4CD;</div>
-    <div>
-      <div class="card-title">Spatial Hash Matcher</div>
-      <div class="card-subtitle">SpatialHashMatcher.match(candidates:tracks:dt:)</div>
-    </div>
-  </div>
-  <div class="card-body">
-    Correlates promoted candidates with existing tracks using a <strong>spatial hash grid</strong>. Velocity-predicted positions drive <strong>adaptive search radii</strong> — stationary LEDs use a tight 50 px radius; fast camera pans expand up to 200 px.
-    <div class="grid-2" style="margin-top:12px; gap: 10px;">
-      <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
-        <div style="font-size:0.72rem; color:var(--accent-cyan); font-weight:600; margin-bottom:4px;">Velocity Prediction</div>
-        <div style="font-size:0.72rem;"><code>predicted = pos + vel &times; &Delta;t</code></div>
-      </div>
-      <div style="background:rgba(255,255,255,0.03); border-radius:8px; padding:10px;">
-        <div style="font-size:0.72rem; color:var(--accent-cyan); font-weight:600; margin-bottom:4px;">Adaptive Radius</div>
-        <div style="font-size:0.72rem;"><code>r = min(200, 50 + speed&times;&Delta;t&times;1.5)</code></div>
-      </div>
-    </div>
-    <details>
-      <summary>Settings</summary>
-      <div class="settings-grid">
-        <span class="key">cellSize</span><span class="val">100 px</span>
-        <span class="key">maxMatchDistance</span><span class="val">50 px</span>
-        <span class="key">velocityMultiplier</span><span class="val">1.5</span>
-        <span class="key">maxSearchRadius</span><span class="val">200 px</span>
-      </div>
-    </details>
-  </div>
-</div>
-
-<!-- Branch arrow -->
-<div class="branch-container">
-  <svg class="branch-svg" width="600" height="56" viewBox="0 0 600 56">
-    <defs>
-      <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-        <path d="M0,0 L8,3 L0,6" fill="none" stroke="var(--accent-blue)" stroke-width="1.5"/>
-      </marker>
-    </defs>
-    <!-- center trunk -->
-    <line x1="300" y1="0" x2="300" y2="16" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3">
-      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
-    </line>
-    <!-- left branch -->
-    <path d="M300,16 C300,36 100,36 100,52" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
-      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
-    </path>
-    <!-- center branch -->
-    <line x1="300" y1="16" x2="300" y2="52" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
-      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
-    </line>
-    <!-- right branch -->
-    <path d="M300,16 C300,36 500,36 500,52" fill="none" stroke="var(--accent-blue)" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#ah)">
-      <animate attributeName="stroke-dashoffset" from="0" to="-7" dur="1s" repeatCount="indefinite"/>
-    </path>
-    <!-- labels -->
-    <text x="100" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">assignments</text>
-    <text x="300" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">MatchResult</text>
-    <text x="500" y="10" text-anchor="middle" fill="var(--text-dim)" font-size="9" font-family="monospace">lostTrackIDs</text>
-  </svg>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  TRACK UPDATE (3-column)                        -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Track Update</div>
-
-<div class="grid-3">
-  <!-- Matched -->
-  <div class="card" style="--card-accent: var(--accent-green);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x2714;</div>
-      <div>
-        <div class="card-title">Matched Tracks</div>
-        <div class="card-subtitle">Update existing</div>
-      </div>
-    </div>
-    <div class="card-body">
-      <strong>Position &amp; Velocity</strong> &mdash; motion estimator (EMA &alpha;=0.4) smooths jitter.<br><br>
-      <strong>Symbol Classification</strong> &mdash; brightness-weighted color &rarr; R/G/B/W symbol via max-channel heuristic.<br><br>
-      <strong>Feed Decoder</strong> &mdash; symbol pushed to per-track <code>SymbolDecoder</code>; state machine advances.
-    </div>
-  </div>
-
-  <!-- New -->
-  <div class="card" style="--card-accent: var(--accent-blue);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);">&#x2795;</div>
-      <div>
-        <div class="card-title">New Tracks</div>
-        <div class="card-subtitle">newCandidates</div>
-      </div>
-    </div>
-    <div class="card-body">
-      Unmatched candidates spawn fresh tracks, each receiving a new <code>SymbolDecoder</code> from the encoding strategy.<br><br>
-      Sorted by quality: <code>confidence &times; (1 &minus; eccentricity)</code><br><br>
-      Capped at <span class="tag blue">maxTracks: 64</span>
-    </div>
-  </div>
-
-  <!-- Lost -->
-  <div class="card" style="--card-accent: var(--accent-red);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(239,68,68,0.15); color:var(--accent-red);">&#x274C;</div>
-      <div>
-        <div class="card-title">Lost Tracks</div>
-        <div class="card-subtitle">Garbage Collection</div>
-      </div>
-    </div>
-    <div class="card-body">
-      Increment <code>framesLost</code> counter for each unmatched track.<br><br>
-      Remove when <code>framesLost &gt; lostThreshold</code>.<br><br>
-      <span class="tag red">lostThreshold: 30 frames</span>
-    </div>
-  </div>
-</div>
-
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">Per-Track: PixelSample &rarr; classify &rarr; decode</div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  PROTOCOL / DECODING                            -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Protocol Layer &mdash; PLSRProtocol / RGB Differential Phase</div>
-
-<div class="grid-2">
-  <!-- Classifier -->
-  <div class="card" style="--card-accent: var(--accent-orange);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F3A8;</div>
-      <div>
-        <div class="card-title">Symbol Classifier</div>
-        <div class="card-subtitle">RGBDiffPhaseClassifier</div>
-      </div>
-    </div>
-    <div class="card-body">
-      Converts <code>PixelSample</code> to a discrete <code>Symbol</code> using max-channel heuristic.
-      <div style="margin-top:8px;">
-        <span class="tag red">Red</span>
-        <span class="tag green">Green</span>
-        <span class="tag blue">Blue</span>
-        <span class="tag">White</span>
-        <span class="tag" style="opacity:0.5;">nil (dim/ambiguous)</span>
-      </div>
-      <details>
-        <summary>Classification Rules</summary>
-        <div class="card-body" style="margin-top:4px;">
-          &bull; <code>max(r,g,b) &lt; darknessThreshold</code> &rarr; nil (too dim)<br>
-          &bull; <code>min/max &gt; whiteTolerance</code> &rarr; White<br>
-          &bull; Dominant channel wins (with epsilon guard)
-        </div>
-      </details>
-    </div>
-  </div>
-
-  <!-- Decoder -->
-  <div class="card" style="--card-accent: var(--accent-green);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x1F513;</div>
-      <div>
-        <div class="card-title">Symbol Decoder</div>
-        <div class="card-subtitle">RGBDiffPhaseDecoder</div>
-      </div>
-    </div>
-    <div class="card-body">
-      State machine decodes symbol stream into LED address. Consecutive duplicate symbols are deduplicated (hold detection).
-      <div class="state-machine">
-        <div class="state-node state-idle">idle</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-active">calibrating</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-active">synced</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-receiving">receiving(n)</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-success">decoded(id)</div>
-      </div>
-      <div style="margin-top:4px; margin-left: 200px;">
-        <span class="state-arrow" style="padding:0;">&searr;</span>
-        <span class="state-node state-error">failed(err)</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Packet Structure -->
-<div style="margin-top: 16px;">
-  <div class="card" style="--card-accent: var(--accent-orange);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F4E6;</div>
-      <div>
-        <div class="card-title">Packet Structure</div>
-        <div class="card-subtitle">Variable-length address encoding</div>
-      </div>
-    </div>
-    <div class="card-body">
-      <div style="display:flex; gap:0; margin:8px 0; flex-wrap:wrap;">
-        <div style="background:rgba(148,163,184,0.15); padding:8px 14px; border-radius:8px 0 0 8px; border:1px solid var(--border); font-size:0.75rem; text-align:center;">
-          <div style="color:var(--text-bright); font-weight:600;">Preamble</div>
-          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">W R G B W</div>
-          <div style="color:var(--text-dim); font-size:0.6rem;">5 symbols</div>
-        </div>
-        <div style="background:rgba(139,92,246,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
-          <div style="color:var(--accent-purple); font-weight:600;">Sync</div>
-          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">W</div>
-          <div style="color:var(--text-dim); font-size:0.6rem;">1 symbol</div>
-        </div>
-        <div style="background:rgba(59,130,246,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
-          <div style="color:var(--accent-blue); font-weight:600;">Header</div>
-          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">nibble count</div>
-          <div style="color:var(--text-dim); font-size:0.6rem;">4 bits</div>
-        </div>
-        <div style="background:rgba(6,182,212,0.1); padding:8px 14px; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center; flex: 1; min-width:100px;">
-          <div style="color:var(--accent-cyan); font-weight:600;">Address</div>
-          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">LED ID bits</div>
-          <div style="color:var(--text-dim); font-size:0.6rem;">4&ndash;12 bits (variable)</div>
-        </div>
-        <div style="background:rgba(16,185,129,0.1); padding:8px 14px; border-radius:0 8px 8px 0; border:1px solid var(--border); border-left:none; font-size:0.75rem; text-align:center;">
-          <div style="color:var(--accent-green); font-weight:600;">CRC</div>
-          <div style="color:var(--text-dim); font-size:0.65rem; margin-top:2px;">CRC-4 or CRC-8</div>
-          <div style="color:var(--text-dim); font-size:0.6rem;">4&ndash;8 bits</div>
+      <div class="type-card">
+        <div class="type-card-title">ThresholdDetector.Settings <span class="kind kind-struct">struct</span></div>
+        <div class="settings-tbl">
+          <span class="k">brightnessThreshold</span><span class="v">0.3</span>
+          <span class="k">downsampleFactor</span><span class="v">0.25</span>
+          <span class="k">thresholdMode</span><span class="v">.fixed | .otsu | .adaptive</span>
+          <span class="k">morphRadius</span><span class="v">2.0</span>
+          <span class="k">maxEccentricity</span><span class="v">0.85</span>
+          <span class="k">minCandidateArea</span><span class="v">4 px</span>
+          <span class="k">maxCandidateArea</span><span class="v">10,000 px</span>
+          <span class="k">medianFilterEnabled</span><span class="v">true</span>
+          <span class="k">morphCloseEnabled</span><span class="v">false</span>
         </div>
       </div>
-      <div style="font-size:0.72rem; margin-top:4px; color:var(--text-dim);">
-        <strong>Bit encoding:</strong> data is in color <em>transitions</em>, not absolute colors. Clockwise RGB rotation = 1, counter-clockwise = 0.
-      </div>
     </div>
+
+    <div class="sub-label">Internal: ComponentStats &rarr; Eccentricity</div>
+    <div class="desc">
+      CCL accumulates per-blob moments (<code>sumX, sumY, sumX2, sumY2, sumXY</code>). Eccentricity is computed from covariance matrix eigenvalues:
+      <code>e = sqrt(1 - lambda_min / lambda_max)</code>. 0 = circle, 1 = line. Rejects <code>e > 0.85</code>.
+      Color is sampled with brightness-weighted averaging &mdash; only pixels above threshold contribute, weighted by <code>max(R,G,B)</code>.
+    </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label">[LEDCandidate]</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L2: NURSERY                                               -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--purple);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">2</div>
+    <div class="layer-info">
+      <div class="layer-title">Candidate Nursery</div>
+      <div class="layer-subtitle">CandidateNursery.process(_:) &mdash; temporal noise gate</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">[LEDCandidate]</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--purple);">[LEDCandidate]</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
-</div>
+  <div class="layer-detail"><div class="layer-content">
 
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">decoded LED ID &rarr; Track.decodedID</div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  OUTPUT / ORCHESTRATION                        -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Orchestration &amp; Output</div>
-
-<div class="grid-2">
-  <!-- TrackManager -->
-  <div class="card" style="--card-accent: var(--accent-blue);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(59,130,246,0.15); color:var(--accent-blue);">&#x1F3AF;</div>
-      <div>
-        <div class="card-title">TrackManager</div>
-        <div class="card-subtitle">TrackManager.processFrame(frameData:)</div>
-      </div>
+    <div class="desc">
+      Filters transient noise by requiring candidates to appear in <strong>N consecutive frames</strong> before promotion. Each incoming candidate matches the nearest "proto" within <code>matchDistance</code>. Unmatched protos are evicted after <code>lostFrames</code>.
     </div>
-    <div class="card-body">
-      Central orchestrator that wires together all pipeline stages per frame:
-      <div style="margin-top:8px; font-family:'SF Mono','Fira Code',monospace; font-size:0.7rem; line-height:2; color:var(--text-dim);">
-        <span class="tag cyan">1</span> detect &rarr;
-        <span class="tag purple">2</span> nursery &rarr;
-        <span class="tag purple">3</span> match &rarr;
-        <span class="tag green">4</span> update &rarr;
-        <span class="tag blue">5</span> create &rarr;
-        <span class="tag red">6</span> gc
-      </div>
-      <details>
-        <summary>Settings</summary>
-        <div class="settings-grid">
-          <span class="key">maxTracks</span><span class="val">64</span>
-          <span class="key">lostThreshold</span><span class="val">30 frames</span>
-          <span class="key">nurseryPromotionFrames</span><span class="val">3</span>
-          <span class="key">nurseryMatchDistance</span><span class="val">30 px</span>
+
+    <div class="proto-block">
+      <span class="kw">struct</span> <span class="ty">CandidateNursery</span>: <span class="ty">Sendable</span> {<br>
+      &nbsp;&nbsp;<span class="kw">mutating func</span> <span class="fn">process</span>(_ candidates: [<span class="ty">LEDCandidate</span>]) -> [<span class="ty">LEDCandidate</span>]<br>
+      &nbsp;&nbsp;<span class="kw">mutating func</span> <span class="fn">reset</span>()<br>
+      &nbsp;&nbsp;<span class="kw">var</span> <span class="pr">protoCount</span>: <span class="ty">Int</span> { <span class="kw">get</span> }<br>
+      }
+    </div>
+
+    <div class="grid-2">
+      <div class="type-card">
+        <div class="type-card-title">CandidateNursery.Settings <span class="kind kind-struct">struct</span></div>
+        <div class="settings-tbl">
+          <span class="k">promotionFrames</span><span class="v">3</span>
+          <span class="k">matchDistance</span><span class="v">30 px</span>
+          <span class="k">lostFrames</span><span class="v">2</span>
+          <span class="k">maxProtos</span><span class="v">30</span>
         </div>
-      </details>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">Internal: ProtoCandidate <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">id</span><span class="sep">:</span><span class="type">UUID</span></div>
+        <div class="field"><span class="name">position</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">consecutiveFrames</span><span class="sep">:</span><span class="type">Int</span></div>
+        <div class="field"><span class="name">framesLost</span><span class="sep">:</span><span class="type">Int</span></div>
+      </div>
     </div>
-  </div>
 
-  <!-- Track -->
-  <div class="card" style="--card-accent: var(--accent-green);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(16,185,129,0.15); color:var(--accent-green);">&#x1F4CC;</div>
+    <div class="sub-label">Logic</div>
+    <div class="desc">
+      1. Match each candidate to closest proto within 30 px<br>
+      2. Increment <code>consecutiveFrames</code> on match<br>
+      3. Promote to output when count &ge; 3<br>
+      4. Reset counter if proto was lost then reappears<br>
+      5. Evict proto if absent > 2 frames<br>
+      6. Cap protos at 30 (weakest evicted first)
+    </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label">Promoted [LEDCandidate]</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L3: MATCHING                                              -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--purple);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">3</div>
+    <div class="layer-info">
+      <div class="layer-title">Track Matching</div>
+      <div class="layer-subtitle">protocol TrackMatcher &rarr; SpatialHash | VisionFramework</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">[LEDCandidate]</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--purple);">MatchResult</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
+  </div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="proto-block">
+      <span class="kw">protocol</span> <span class="ty">TrackMatcher</span> {<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">addTrack</span>(_ track: <span class="ty">Track</span>)<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">removeTrack</span>(id: <span class="ty">Track.ID</span>)<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">updateTrackPosition</span>(id: <span class="ty">Track.ID</span>, newPosition: <span class="ty">CGPoint</span>, newVelocity: <span class="ty">CGPoint</span>)<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">prepareForFrame</span>(_ frame: <span class="ty">FrameData</span>) <span class="cm">// default no-op</span><br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">match</span>(candidates: [<span class="ty">LEDCandidate</span>], frameDelta: <span class="ty">TimeInterval</span>) -> <span class="ty">MatchResult</span><br>
+      }
+    </div>
+
+    <div class="type-cards">
+      <div class="type-card">
+        <div class="type-card-title">MatchResult <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">assignments</span><span class="sep">:</span><span class="type">[LEDCandidate.ID : Track.ID]</span></div>
+        <div class="field"><span class="name">newCandidates</span><span class="sep">:</span><span class="type">[LEDCandidate]</span></div>
+        <div class="field"><span class="name">lostTrackIDs</span><span class="sep">:</span><span class="type">Set&lt;Track.ID&gt;</span></div>
+        <div class="impl-note">Sendable &mdash; drives the 3-way split in TrackManager</div>
+      </div>
+    </div>
+
+    <div class="strategies" id="matcher-tabs">
+      <button class="strat-tab active" onclick="switchStrat(this, 'matcher')">SpatialHashMatcher</button>
+      <button class="strat-tab" onclick="switchStrat(this, 'matcher')">VisionTrackMatcher</button>
+    </div>
+
+    <!-- SpatialHashMatcher -->
+    <div class="strat-panel active" data-group="matcher">
+      <div class="desc">
+        O(1) average-case grid lookup. Predicts each track's position using velocity, then queries nearby cells with an <strong>adaptive radius</strong> that widens for fast camera motion.
+        Greedy closest-match assignment (one candidate per track).
+      </div>
+      <div class="grid-2">
+        <div class="type-card">
+          <div class="type-card-title">SpatialHashMatcher <span class="kind kind-class">class</span></div>
+          <div class="field"><span class="name">grid</span><span class="sep">:</span><span class="type">SpatialHashGrid</span></div>
+          <div class="field"><span class="name">tracks</span><span class="sep">:</span><span class="type">[Track.ID : Track]</span></div>
+          <div class="impl-note">predicted = pos + vel * dt</div>
+          <div class="impl-note">radius = min(maxR, base + speed * dt * mult)</div>
+        </div>
+        <div class="type-card">
+          <div class="type-card-title">Settings <span class="kind kind-struct">struct</span></div>
+          <div class="settings-tbl">
+            <span class="k">cellSize</span><span class="v">100 px</span>
+            <span class="k">maxMatchDistance</span><span class="v">50 px</span>
+            <span class="k">velocityMultiplier</span><span class="v">1.5</span>
+            <span class="k">maxSearchRadius</span><span class="v">200 px</span>
+          </div>
+        </div>
+      </div>
+      <div class="type-card" style="margin-top:10px;">
+        <div class="type-card-title">SpatialHashGrid <span class="kind kind-class">class</span></div>
+        <div class="desc" style="margin:0;">
+          2D hash map: <code>GridKey{x,y}</code> &rarr; <code>[Track.ID]</code>. Methods: <code>insert()</code>, <code>findNearby(to:radius:)</code>, <code>position(for:)</code>, <code>clear()</code>.
+        </div>
+      </div>
+    </div>
+
+    <!-- VisionTrackMatcher -->
+    <div class="strat-panel" data-group="matcher">
+      <div class="desc">
+        Uses Apple <code>VNTrackObjectRequest</code> for visual feature tracking. One <code>VNSequenceRequestHandler</code> per track.
+        Falls back to <code>SpatialHashMatcher</code> internally for untracked candidates.
+      </div>
+      <div class="branch-label"><span class="dot wip"></span> Branch: claude/vision-framework-velocity-RcQUK</div>
+      <div class="grid-2" style="margin-top:8px;">
+        <div class="type-card">
+          <div class="type-card-title">VisionTrackMatcher <span class="kind kind-class">class</span></div>
+          <div class="field"><span class="name">visionTracks</span><span class="sep">:</span><span class="type">[Track.ID : VisionTrackState]</span></div>
+          <div class="field"><span class="name">spatialMatcher</span><span class="sep">:</span><span class="type">SpatialHashMatcher</span></div>
+          <div class="field"><span class="name">currentPixelBuffer</span><span class="sep">:</span><span class="type">CVPixelBuffer?</span></div>
+          <div class="impl-note">prepareForFrame() stashes pixel buffer for VNRequests</div>
+          <div class="impl-note">4 phases: Vision track &rarr; match to candidates &rarr; spatial fallback &rarr; merge</div>
+        </div>
+        <div class="type-card">
+          <div class="type-card-title">Settings <span class="kind kind-struct">struct</span></div>
+          <div class="settings-tbl">
+            <span class="k">minTrackingConfidence</span><span class="v">Float</span>
+            <span class="k">boundingBoxPadding</span><span class="v">Float</span>
+            <span class="k">trackingLevel</span><span class="v">.fast | .accurate</span>
+            <span class="k">useSpatialFallback</span><span class="v">true</span>
+            <span class="k">fallbackMatchDistance</span><span class="v">CGFloat</span>
+          </div>
+        </div>
+      </div>
+      <div class="type-card" style="margin-top:10px;">
+        <div class="type-card-title">VisionTrackState <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">handler</span><span class="sep">:</span><span class="type">VNSequenceRequestHandler</span></div>
+        <div class="field"><span class="name">lastObservation</span><span class="sep">:</span><span class="type">VNDetectedObjectObservation?</span></div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label">MatchResult { assignments, newCandidates, lostTrackIDs }</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L4: TRACK MANAGEMENT                                      -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--blue);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">4</div>
+    <div class="layer-info">
+      <div class="layer-title">Track Management</div>
+      <div class="layer-subtitle">TrackManager.processFrame(_:) &mdash; orchestrator</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">MatchResult</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--blue);">[Track.ID : Track]</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
+  </div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="desc">
+      Central orchestrator. Owns the detector, matcher, nursery, encoding strategy, and all active tracks. Each <code>processFrame()</code> call runs the full pipeline synchronously.
+    </div>
+
+    <div class="proto-block">
+      <span class="kw">class</span> <span class="ty">TrackManager</span> {<br>
+      &nbsp;&nbsp;<span class="kw">private let</span> <span class="pr">detector</span>: <span class="ty">LEDDetector</span><br>
+      &nbsp;&nbsp;<span class="kw">private let</span> <span class="pr">matcher</span>: <span class="ty">TrackMatcher</span><br>
+      &nbsp;&nbsp;<span class="kw">private let</span> <span class="pr">encodingStrategy</span>: <span class="ty">EncodingStrategy</span><br>
+      &nbsp;&nbsp;<span class="kw">private let</span> <span class="pr">classifier</span>: <span class="ty">SymbolClassifier</span><br>
+      &nbsp;&nbsp;<span class="kw">private let</span> <span class="pr">motionEstimator</span>: <span class="ty">MotionEstimator</span><br>
+      &nbsp;&nbsp;<span class="kw">private var</span> <span class="pr">nursery</span>: <span class="ty">CandidateNursery</span><br>
+      &nbsp;&nbsp;<span class="kw">public var</span> <span class="pr">activeTracks</span>: [<span class="ty">Track.ID</span> : <span class="ty">Track</span>]<br>
+      <br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">processFrame</span>(_ frame: <span class="ty">FrameData</span>) <span class="cm">// runs full pipeline</span><br>
+      }
+    </div>
+
+    <div class="sub-label">Per-Frame Pipeline</div>
+    <div class="pipe">
+      <div class="pipe-step" style="border-color:var(--cyan);">1. detect</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step" style="border-color:var(--purple);">2. nursery</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step" style="border-color:var(--purple);">3. match</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step" style="border-color:var(--green);">4. update matched</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step" style="border-color:var(--blue);">5. create new</div><div class="pipe-chev">&rsaquo;</div>
+      <div class="pipe-step" style="border-color:var(--red);">6. gc lost</div>
+    </div>
+
+    <div class="grid-3" style="margin-top: 12px;">
+      <div class="type-card">
+        <div class="type-card-title" style="color:var(--green);">Step 4: Update Matched</div>
+        <div class="desc" style="margin:0;">
+          For each assignment: estimate velocity via <code>MotionEstimator</code>, classify color sample, feed symbol to per-track decoder.
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title" style="color:var(--blue);">Step 5: Create New</div>
+        <div class="desc" style="margin:0;">
+          Unmatched candidates become new tracks. Sorted by <code>confidence * (1-eccentricity)</code>. Each gets a fresh <code>SymbolDecoder</code>. Capped at <code>maxTracks</code>.
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title" style="color:var(--red);">Step 6: GC Lost</div>
+        <div class="desc" style="margin:0;">
+          Increment <code>framesLost</code> for unmatched tracks. Remove when <code>framesLost > lostThreshold</code> (30 frames).
+        </div>
+      </div>
+    </div>
+
+    <div class="sub-label">Motion Estimation</div>
+    <div class="proto-block">
+      <span class="kw">protocol</span> <span class="ty">MotionEstimator</span> {<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">estimateMotion</span>(track: <span class="ty">Track</span>, newPosition: <span class="ty">CGPoint</span>, frameDelta: <span class="ty">TimeInterval</span>) -> <span class="ty">CGPoint</span><br>
+      }
+    </div>
+    <div class="grid-2">
+      <div class="type-card">
+        <div class="type-card-title">CentroidDeltaEstimator <span class="kind kind-struct">struct</span></div>
+        <div class="impl-note">Simple: velocity = (newPos - oldPos) / dt</div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">SmoothedMotionEstimator <span class="kind kind-struct">struct</span></div>
+        <div class="impl-note">EMA: smoothed = alpha * raw + (1-alpha) * prev &mdash; alpha=0.4</div>
+      </div>
+    </div>
+
+    <div class="type-card" style="margin-top:10px;">
+      <div class="type-card-title">TrackManager.Settings <span class="kind kind-struct">struct</span></div>
+      <div class="settings-tbl">
+        <span class="k">lostThreshold</span><span class="v">30 frames</span>
+        <span class="k">maxTracks</span><span class="v">64</span>
+        <span class="k">nurseryPromotionFrames</span><span class="v">3</span>
+        <span class="k">nurseryMatchDistance</span><span class="v">30 px</span>
+        <span class="k">nurseryLostFrames</span><span class="v">2</span>
+        <span class="k">nurseryMaxProtos</span><span class="v">30</span>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label">Track (per-LED entity with decoder)</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L5: TRACK + CLASSIFICATION + DECODING                     -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--green);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">5</div>
+    <div class="layer-info">
+      <div class="layer-title">Per-Track Decoding</div>
+      <div class="layer-subtitle">Track.processObservation &rarr; SymbolClassifier &rarr; SymbolDecoder</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">PixelSample</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--orange);">Symbol?</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--green);">DecodeResult</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
+  </div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="desc">
+      Each <code>Track</code> holds its own <code>SymbolDecoder</code> instance. On each matched frame,
+      the color sample is classified to a discrete <code>Symbol</code>, then fed to the decoder state machine.
+    </div>
+
+    <div class="type-cards">
+      <div class="type-card">
+        <div class="type-card-title">Track <span class="kind kind-class">class</span> <span class="tag tag-blue" style="font-size:0.5rem;">@Observable</span></div>
+        <div class="field"><span class="name">id</span><span class="sep">:</span><span class="type">UUID</span></div>
+        <div class="field"><span class="name">position</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">velocity</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">area</span><span class="sep">:</span><span class="type">Float</span></div>
+        <div class="field"><span class="name">state</span><span class="sep">:</span><span class="type">TrackState</span></div>
+        <div class="field"><span class="name">decoder</span><span class="sep">:</span><span class="type">any SymbolDecoder</span></div>
+        <div class="field"><span class="name">symbolBuffer</span><span class="sep">:</span><span class="type">[SymbolSample]</span></div>
+        <div class="field"><span class="name">stateHistory</span><span class="sep">:</span><span class="type">[StateTransition]</span></div>
+        <div class="field"><span class="name">lastSeenTime</span><span class="sep">:</span><span class="type">TimeInterval</span></div>
+        <div class="field"><span class="name">framesLost</span><span class="sep">:</span><span class="type">Int</span></div>
+        <div class="field"><span class="name">decodedID</span><span class="sep">:</span><span class="type">UInt16?</span> <span style="color:var(--text-dim);font-size:0.6rem;">(computed)</span></div>
+        <div style="margin-top:6px; font-size:0.65rem; font-family:var(--mono); color:var(--green);">
+          func processObservation(sample: PixelSample, classifier: SymbolClassifier, timestamp: TimeInterval)
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">Supporting Types</div>
+
+        <div style="margin-top:6px; font-size:0.62rem; font-weight:600; color:var(--orange);">TrackState <span class="kind kind-enum">enum</span></div>
+        <div class="field"><span class="name">.preambleSearch</span></div>
+        <div class="field"><span class="name">.receiving</span><span class="sep">(</span><span class="type">symbolCount: Int</span><span class="sep">)</span></div>
+        <div class="field"><span class="name">.decoded</span><span class="sep">(</span><span class="type">UInt16</span><span class="sep">)</span></div>
+        <div class="field"><span class="name">.failed</span><span class="sep">(</span><span class="type">DecodeError</span><span class="sep">)</span></div>
+
+        <div style="margin-top:8px; font-size:0.62rem; font-weight:600; color:var(--cyan);">SymbolSample <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">rawPixel</span><span class="sep">:</span><span class="type">PixelSample</span></div>
+        <div class="field"><span class="name">classifiedSymbol</span><span class="sep">:</span><span class="type">Symbol?</span></div>
+        <div class="field"><span class="name">timestamp</span><span class="sep">:</span><span class="type">TimeInterval</span></div>
+
+        <div style="margin-top:8px; font-size:0.62rem; font-weight:600; color:var(--cyan);">StateTransition <span class="kind kind-struct">struct</span></div>
+        <div class="field"><span class="name">timestamp</span><span class="sep">:</span><span class="type">TimeInterval</span></div>
+        <div class="field"><span class="name">from</span><span class="sep">:</span><span class="type">TrackState</span></div>
+        <div class="field"><span class="name">to</span><span class="sep">:</span><span class="type">TrackState</span></div>
+        <div class="field"><span class="name">reason</span><span class="sep">:</span><span class="type">String</span></div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label">PixelSample &rarr; Symbol? &rarr; DecodeResult</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L6: PROTOCOL / ENCODING STRATEGY                          -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--orange);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">6</div>
+    <div class="layer-info">
+      <div class="layer-title">Encoding Strategy</div>
+      <div class="layer-subtitle">protocol EncodingStrategy &rarr; RGBDifferentialPhase</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">Symbol stream</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--green);">UInt16 LED ID</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
+  </div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="desc">
+      Pluggable factory protocol. Each strategy produces its own encoder (TX side), classifier, and decoder (RX side).
+      Currently one implementation: <strong>RGB Differential Phase</strong>.
+    </div>
+
+    <div class="proto-block">
+      <span class="kw">protocol</span> <span class="ty">EncodingStrategy</span> {<br>
+      &nbsp;&nbsp;<span class="kw">var</span> <span class="pr">name</span>: <span class="ty">String</span> { <span class="kw">get</span> }<br>
+      &nbsp;&nbsp;<span class="kw">var</span> <span class="pr">calibrationSequence</span>: [<span class="ty">Symbol</span>] { <span class="kw">get</span> }<br>
+      &nbsp;&nbsp;<span class="kw">var</span> <span class="pr">syncSymbol</span>: <span class="ty">Symbol</span> { <span class="kw">get</span> }<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">makeEncoder</span>() -> <span class="ty">SymbolEncoder</span><br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">makeClassifier</span>() -> <span class="ty">SymbolClassifier</span><br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">makeDecoder</span>() -> <span class="ty">SymbolDecoder</span><br>
+      }
+    </div>
+
+    <div class="grid-3" style="margin-top:8px;">
+      <div class="proto-block" style="margin:0;">
+        <span class="kw">protocol</span> <span class="ty">SymbolEncoder</span> {<br>
+        &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">encodePacket</span>(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ledID: <span class="ty">UInt16</span>,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;ledCount: <span class="ty">UInt16</span><br>
+        &nbsp;&nbsp;) -> [<span class="ty">Symbol</span>]<br>
+        &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">color</span>(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;for: <span class="ty">Symbol</span><br>
+        &nbsp;&nbsp;) -> <span class="ty">LEDColor</span><br>
+        }
+      </div>
+      <div class="proto-block" style="margin:0;">
+        <span class="kw">protocol</span> <span class="ty">SymbolClassifier</span> {<br>
+        &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">classify</span>(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;sample: <span class="ty">PixelSample</span><br>
+        &nbsp;&nbsp;) -> <span class="ty">Symbol?</span><br>
+        &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">calibrate</span>(...)<br>
+        &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">reset</span>()<br>
+        }
+      </div>
+      <div class="proto-block" style="margin:0;">
+        <span class="kw">protocol</span> <span class="ty">SymbolDecoder</span> {<br>
+        &nbsp;&nbsp;<span class="kw">mutating func</span> <span class="fn">feed</span>(<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;_ symbol: <span class="ty">Symbol?</span><br>
+        &nbsp;&nbsp;) -> <span class="ty">DecodeResult</span><br>
+        &nbsp;&nbsp;<span class="kw">mutating func</span> <span class="fn">reset</span>()<br>
+        }
+      </div>
+    </div>
+
+    <div class="sub-label">Implementation: RGB Differential Phase</div>
+
+    <div class="grid-2" style="margin-top:6px;">
       <div>
-        <div class="card-title">Track</div>
-        <div class="card-subtitle">@Observable class &mdash; per-LED entity</div>
+        <div class="type-card">
+          <div class="type-card-title">Symbol <span class="kind kind-enum">enum</span></div>
+          <div style="margin-top:4px;">
+            <span class="tag tag-red">.red</span>
+            <span class="tag tag-green">.green</span>
+            <span class="tag tag-blue">.blue</span>
+            <span class="tag tag-dim">.white</span>
+            <span class="tag tag-dim">.bright</span>
+            <span class="tag tag-dim">.dim</span>
+            <span class="tag tag-dim">.unknown</span>
+          </div>
+        </div>
+        <div class="type-card" style="margin-top:8px;">
+          <div class="type-card-title">DecodeResult <span class="kind kind-enum">enum</span></div>
+          <div class="states">
+            <div class="state s-idle">.idle</div><div class="state-arr">&rarr;</div>
+            <div class="state s-work">.calibrating</div><div class="state-arr">&rarr;</div>
+            <div class="state s-work">.synced</div><div class="state-arr">&rarr;</div>
+            <div class="state s-recv">.receiving(n)</div><div class="state-arr">&rarr;</div>
+            <div class="state s-ok">.decoded(UInt16)</div>
+          </div>
+          <div style="margin-top:4px;margin-left:48px;">
+            <span class="state-arr">&searr;</span>
+            <span class="state s-err">.failed(DecodeError)</span>
+          </div>
+          <div class="impl-note">DecodeError: .crcMismatch | .timeout | .invalidHeader</div>
+        </div>
       </div>
-    </div>
-    <div class="card-body">
-      Persistent entity representing a single LED being tracked. Holds all per-LED state and drives SwiftUI reactivity.
-      <div style="margin-top:8px;">
-        <span class="tag cyan">position</span>
-        <span class="tag cyan">velocity</span>
-        <span class="tag orange">symbolBuffer</span>
-        <span class="tag green">decoder</span>
-        <span class="tag purple">state</span>
-        <span class="tag">stateHistory</span>
-        <span class="tag red">framesLost</span>
-      </div>
-      <div class="state-machine" style="margin-top: 8px;">
-        <div class="state-node state-active">preambleSearch</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-receiving">receiving(n)</div>
-        <div class="state-arrow">&rarr;</div>
-        <div class="state-node state-success">decoded(id)</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="flow-arrow">
-  <svg viewBox="0 0 24 28"><path d="M12 2 L12 22 M6 17 L12 24 L18 17"/></svg>
-  <div class="label">[TrackSnapshot] &rarr; @MainActor for UI</div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  APP INTEGRATION                                -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">App Layer &mdash; PLSRApp</div>
-
-<div class="grid-4">
-  <div class="card" style="--card-accent: var(--accent-pink);">
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F4F1;</div>
-      <div><div class="card-title" style="font-size:0.82rem;">Camera Preview</div></div>
-    </div>
-    <div class="card-body" style="font-size:0.72rem;">Live feed with debug overlay showing candidates, tracks, and decoded IDs.</div>
-  </div>
-  <div class="card" style="--card-accent: var(--accent-pink);">
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F527;</div>
-      <div><div class="card-title" style="font-size:0.82rem;">Debug Settings</div></div>
-    </div>
-    <div class="card-body" style="font-size:0.72rem;">Live sliders for all detector, matcher, and encoder parameters.</div>
-  </div>
-  <div class="card" style="--card-accent: var(--accent-pink);">
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F4E1;</div>
-      <div><div class="card-title" style="font-size:0.82rem;">DDP Network</div></div>
-    </div>
-    <div class="card-body" style="font-size:0.72rem;">UDP commands to WLED controllers. mDNS device discovery.</div>
-  </div>
-  <div class="card" style="--card-accent: var(--accent-pink);">
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(236,72,153,0.15); color:var(--accent-pink); font-size:0.8rem;">&#x1F39B;</div>
-      <div><div class="card-title" style="font-size:0.82rem;">Session Control</div></div>
-    </div>
-    <div class="card-body" style="font-size:0.72rem;">Preview &rarr; calibration &rarr; scanning lifecycle management.</div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════════════ -->
-<!--  TRANSMITTER SIDE                               -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Transmitter (LED Controller / Mock)</div>
-
-<div class="grid-2">
-  <div class="card" style="--card-accent: var(--accent-orange);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F4A1;</div>
       <div>
-        <div class="card-title">WLED Controller</div>
-        <div class="card-subtitle">DDP over UDP</div>
+        <div class="type-card">
+          <div class="type-card-title">Packet Structure</div>
+          <div class="packet">
+            <div class="pkt-seg" style="background:rgba(148,163,184,0.08);">
+              <div class="pkt-name" style="color:var(--text);">Preamble</div>
+              <div class="pkt-desc">W R G B W</div>
+            </div>
+            <div class="pkt-seg" style="background:rgba(139,92,246,0.06);">
+              <div class="pkt-name" style="color:var(--purple);">Sync</div>
+              <div class="pkt-desc">W</div>
+            </div>
+            <div class="pkt-seg" style="background:rgba(59,130,246,0.06);">
+              <div class="pkt-name" style="color:var(--blue);">Hdr</div>
+              <div class="pkt-desc">4 bits</div>
+            </div>
+            <div class="pkt-seg" style="background:rgba(6,182,212,0.06); flex:1;">
+              <div class="pkt-name" style="color:var(--cyan);">Address</div>
+              <div class="pkt-desc">4&ndash;12 bits</div>
+            </div>
+            <div class="pkt-seg" style="background:rgba(16,185,129,0.06);">
+              <div class="pkt-name" style="color:var(--green);">CRC</div>
+              <div class="pkt-desc">4|8 bits</div>
+            </div>
+          </div>
+          <div class="impl-note">Bits in color transitions: CW rotation = 1, CCW = 0</div>
+          <div class="impl-note">Consecutive duplicate symbols are deduplicated (hold)</div>
+        </div>
+        <div class="type-card" style="margin-top:8px;">
+          <div class="type-card-title">LEDColor <span class="kind kind-struct">struct</span></div>
+          <div class="field"><span class="name">r</span><span class="sep">:</span><span class="type">Float</span></div>
+          <div class="field"><span class="name">g</span><span class="sep">:</span><span class="type">Float</span></div>
+          <div class="field"><span class="name">b</span><span class="sep">:</span><span class="type">Float</span></div>
+        </div>
       </div>
     </div>
-    <div class="card-body">
-      Physical LED hardware running WLED firmware. Receives DDP packets containing encoded RGB sequences that flash each LED with its unique address pattern.
-    </div>
-  </div>
 
-  <div class="card" style="--card-accent: var(--accent-orange);">
-    <div class="pulse-ring"></div>
-    <div class="card-header">
-      <div class="card-icon" style="background:rgba(245,158,11,0.15); color:var(--accent-orange);">&#x1F5A5;</div>
-      <div>
-        <div class="card-title">PLSRMock</div>
-        <div class="card-subtitle">macOS screen transmitter</div>
+    <div class="type-card" style="margin-top:8px;">
+      <div class="type-card-title">Supporting: PacketBuilder <span class="kind kind-enum">enum</span> &amp; CRC <span class="kind kind-enum">enum</span></div>
+      <div class="desc" style="margin:0;">
+        <code>PacketBuilder.buildPacket(ledID:crcBits:) &rarr; PacketBits</code> &mdash; variable-length address encoding (ceil(log2(id+1)) bits, padded to nibble).<br>
+        <code>CRC.crc4(_:)</code> (poly 0x3 reflected) and <code>CRC.crc8(_:)</code> (poly 0x07).
       </div>
     </div>
-    <div class="card-body">
-      Renders flashing LED dots on screen for testing without hardware. Includes <code>DistractionEngine</code> for timing jitter and <code>GlowConfig</code> for realistic LED profiles.
-    </div>
-  </div>
+
+  </div></div>
 </div>
 
-<!-- ════════════════════════════════════════════════ -->
-<!--  ARCHITECTURE NOTES                             -->
-<!-- ════════════════════════════════════════════════ -->
-<div class="section-label">Key Design Principles</div>
+<div class="flow"><div class="flow-line"></div><span class="flow-label">TrackSnapshot (Sendable copy for UI)</span></div>
 
-<div class="grid-3">
-  <div class="card" style="--card-accent: var(--accent-lime);">
-    <div class="card-header">
-      <div class="card-title" style="font-size:0.82rem;">Pluggable Strategies</div>
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L7: OUTPUT                                                -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer" style="--layer-color: var(--blue);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">OUT</div>
+    <div class="layer-info">
+      <div class="layer-title">Output: Track Snapshots</div>
+      <div class="layer-subtitle">TrackSnapshot &mdash; Sendable cross-actor bridge</div>
     </div>
-    <div class="card-body" style="font-size:0.72rem;">
-      <code>EncodingStrategy</code> protocol abstracts encoding, classification, and decoding. New schemes can be swapped in without touching vision code.
+    <div class="layer-type-flow">
+      <span class="t">Track</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--blue);">TrackSnapshot</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t">@MainActor</span>
     </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
-  <div class="card" style="--card-accent: var(--accent-lime);">
-    <div class="card-header">
-      <div class="card-title" style="font-size:0.82rem;">Transition-Based Data</div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="desc">
+      <code>Track</code> is <code>@Observable</code> but not <code>Sendable</code>. The pipeline runs on a background actor (<code>PipelineProcessor</code>).
+      <code>TrackSnapshot</code> copies all relevant state into a <code>Sendable</code> struct for publishing to <code>@MainActor</code> SwiftUI views.
     </div>
-    <div class="card-body" style="font-size:0.72rem;">
-      Bit values are encoded in color <em>transitions</em> (CW/CCW RGB rotation), not absolute colors. Robust to frame rate variation and exposure drift.
+
+    <div class="type-cards">
+      <div class="type-card">
+        <div class="type-card-title">TrackSnapshot <span class="kind kind-struct">struct</span> <span class="tag tag-blue" style="font-size:0.5rem;">Sendable</span></div>
+        <div class="field"><span class="name">id</span><span class="sep">:</span><span class="type">UUID</span></div>
+        <div class="field"><span class="name">position</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">velocity</span><span class="sep">:</span><span class="type">CGPoint</span></div>
+        <div class="field"><span class="name">area</span><span class="sep">:</span><span class="type">Float</span></div>
+        <div class="field"><span class="name">state</span><span class="sep">:</span><span class="type">TrackState</span></div>
+        <div class="field"><span class="name">symbolBuffer</span><span class="sep">:</span><span class="type">[SymbolSample]</span></div>
+        <div class="field"><span class="name">stateHistory</span><span class="sep">:</span><span class="type">[StateTransition]</span></div>
+        <div class="field"><span class="name">decodedID</span><span class="sep">:</span><span class="type">UInt16?</span></div>
+        <div class="field"><span class="name">framesLost</span><span class="sep">:</span><span class="type">Int</span></div>
+        <div style="margin-top:6px; font-size:0.65rem; font-family:var(--mono); color:var(--green);">
+          init(from track: Track)
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">Data Flow</div>
+        <div class="desc" style="margin:0;">
+          <code>PipelineProcessor</code> (background actor)<br>
+          &nbsp;&rarr; calls <code>TrackManager.processFrame()</code><br>
+          &nbsp;&rarr; maps <code>activeTracks</code> to <code>[TrackSnapshot]</code><br>
+          &nbsp;&rarr; publishes to <code>PipelineService</code> (@MainActor)<br>
+          &nbsp;&rarr; drives SwiftUI overlay rendering
+        </div>
+      </div>
     </div>
+
+  </div></div>
+</div>
+
+<div class="flow"><div class="flow-line"></div><span class="flow-label" style="color:var(--yellow);opacity:0.6;">Phase 5 (planned)</span></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L8: WORLD MODEL (PLANNED)                                 -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div class="layer planned" style="--layer-color: var(--yellow);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">3D</div>
+    <div class="layer-info">
+      <div class="layer-title">World Model <span class="planned-badge">Phase 5</span></div>
+      <div class="layer-subtitle">protocol WorldModel &mdash; 3D reconstruction from decoded tracks + ARKit</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">Track + cameraTransform</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--yellow);">simd_float3</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
-  <div class="card" style="--card-accent: var(--accent-lime);">
-    <div class="card-header">
-      <div class="card-title" style="font-size:0.82rem;">Testable Without Hardware</div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="desc">
+      Planned engine layer that triangulates LED 3D positions from multiple observations. Requires ARKit integration
+      to provide <code>cameraTransform</code> with each frame. The <code>FrameData.cameraTransform</code> field already exists but is passed as <code>nil</code> today.
     </div>
-    <div class="card-body" style="font-size:0.72rem;">
-      <code>PLSRKit</code> runs with <code>swift test</code>&thinsp;&mdash;&thinsp;no Xcode or device needed. <code>FrameSimulator</code> generates synthetic video with known LED positions.
+
+    <div class="proto-block">
+      <span class="cm">// SPEC.md &sect;7 &mdash; planned interface</span><br>
+      <span class="kw">protocol</span> <span class="ty">WorldModel</span> {<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">recordObservation</span>(<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;ledID: <span class="ty">UInt16</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;pixelPosition: <span class="ty">CGPoint</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;cameraTransform: <span class="ty">simd_float4x4</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;timestamp: <span class="ty">TimeInterval</span><br>
+      &nbsp;&nbsp;)<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">position</span>(<span class="pr">for</span> ledID: <span class="ty">UInt16</span>) -> <span class="ty">simd_float3</span>?<br>
+      &nbsp;&nbsp;<span class="kw">var</span> <span class="pr">entries</span>: [<span class="ty">WorldEntry</span>] { <span class="kw">get</span> }<br>
+      }
     </div>
+
+    <div class="sub-label">Planned Capabilities</div>
+    <div class="grid-2">
+      <div class="type-card">
+        <div class="type-card-title" style="color:var(--yellow);">ARKit Integration</div>
+        <div class="desc" style="margin:0;">
+          Replace <code>AVCaptureSession</code> with <code>ARSession</code> to get per-frame <code>simd_float4x4</code> camera transforms. Pre-decode observation buffer (ring buffer of recent frames) to capture observations retroactively once an LED is decoded.
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title" style="color:var(--yellow);">3D Reconstruction</div>
+        <div class="desc" style="margin:0;">
+          Multi-view triangulation (least-squares). Keyframe selection over dense storage.
+          Catmull-Rom spline interpolation for LED string topology. Confidence gates and reflection filtering.
+        </div>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- L9: TX SIDE (mini)                                        -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<div style="margin-top:16px; padding-top:12px; border-top: 1px solid var(--border);">
+  <div style="font-size:0.62rem; text-transform:uppercase; letter-spacing:0.12em; color:var(--text-dim); text-align:center; margin-bottom:10px;">Transmitter Side</div>
+</div>
+
+<div class="layer" style="--layer-color: var(--orange);" onclick="toggle(this)">
+  <div class="layer-bar">
+    <div class="layer-num">TX</div>
+    <div class="layer-info">
+      <div class="layer-title">LED Transmission</div>
+      <div class="layer-subtitle">protocol LEDTransmitter &rarr; DDPNetworkDriver | MockScreenDriver</div>
+    </div>
+    <div class="layer-type-flow">
+      <span class="t">SymbolEncoder</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t" style="color:var(--orange);">LEDColor[ ]</span>
+      <span class="arrow">&rarr;</span>
+      <span class="t">DDP/Screen</span>
+    </div>
+    <div class="layer-chevron">&#x203A;</div>
   </div>
+  <div class="layer-detail"><div class="layer-content">
+
+    <div class="proto-block">
+      <span class="kw">protocol</span> <span class="ty">LEDTransmitter</span>: <span class="ty">Sendable</span> {<br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">startTransmission</span>(ledCount: <span class="ty">UInt16</span>, encoder: <span class="ty">SymbolEncoder</span>, symbolRate: <span class="ty">Double</span>) <span class="kw">async</span><br>
+      &nbsp;&nbsp;<span class="kw">func</span> <span class="fn">stopTransmission</span>()<br>
+      }
+    </div>
+
+    <div class="grid-2">
+      <div class="type-card">
+        <div class="type-card-title">DDPNetworkDriver</div>
+        <div class="desc" style="margin:0;">
+          UDP transmission to WLED hardware. Pre-computes per-LED DDP packets. Symbol rate timing loop drives the flash sequence.
+          Discovery via <code>WLEDDiscoveryService</code> (mDNS + JSON API).
+        </div>
+      </div>
+      <div class="type-card">
+        <div class="type-card-title">PLSRMock / MockScreenDriver</div>
+        <div class="desc" style="margin:0;">
+          macOS screen renderer for hardware-free testing. <code>DistractionEngine</code> adds timing jitter.
+          <code>GlowConfig</code> simulates realistic LED light profiles with brightness falloff.
+        </div>
+      </div>
+    </div>
+
+  </div></div>
 </div>
 
 </div><!-- .diagram -->
 
-<div class="footer">
-  Pulsar System Diagram &mdash; auto-generated from codebase analysis
-</div>
+<script>
+function toggle(layer) {
+  const wasExpanded = layer.classList.contains('expanded');
+
+  // Close all layers
+  document.querySelectorAll('.layer.expanded').forEach(l => {
+    l.classList.remove('expanded');
+  });
+
+  // If it wasn't expanded, open it
+  if (!wasExpanded) {
+    layer.classList.add('expanded');
+    // Scroll into view with some offset
+    setTimeout(() => {
+      const rect = layer.getBoundingClientRect();
+      const offset = 80;
+      if (rect.top < offset || rect.bottom > window.innerHeight) {
+        window.scrollTo({
+          top: window.scrollY + rect.top - offset,
+          behavior: 'smooth'
+        });
+      }
+    }, 50);
+  }
+}
+
+function switchStrat(tab, group) {
+  // Update tabs
+  const parent = tab.parentElement;
+  parent.querySelectorAll('.strat-tab').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+
+  // Update panels
+  const panels = tab.closest('.layer-content').querySelectorAll(`.strat-panel[data-group="${group}"]`);
+  const idx = Array.from(parent.children).indexOf(tab);
+  panels.forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+}
+</script>
 
 </body>
 </html>
