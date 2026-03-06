@@ -14,6 +14,8 @@ function dot {
 }
 
 dot config --local status.showUntrackedFiles no
+dot config --local remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+dot branch --set-upstream-to=origin/main main
 dot checkout
 
 if [ $? = 0 ]; then
