@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# curl -Lks http://jayekub.github.io/dot.sh | /bin/bash
+# curl -Lks http://jayekub.github.io/dot.sh | env bash
 #
 # based on https://www.atlassian.com/git/tutorials/dotfiles
 
